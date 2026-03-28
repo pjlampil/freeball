@@ -1,0 +1,163 @@
+<%# Main frame partial — replaced via Turbo Streams on updates %>
+<% match = frame.match %>
+<% player1 = match.player1 %>
+<% player2 = match.player2 %>
+<% p1_score = frame.player1_score %>
+<% p2_score = frame.player2_score %>
+<% current_visit = frame.current_visit %>
+<% current_player = frame.current_player %>
+
+<div class="space-y-4">
+  <%# Scoreboard %>
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+    <div class="flex items-center justify-between mb-3">
+      <%# Match score %>
+      <div class="text-center flex-1">
+        <p class="font-bold text-white <%= current_player == player1 && frame.in_progress? ? 'text-green-400' : '' %>">
+          <%= player1.name %>
+        </p>
+        <p class="text-4xl font-black mt-1 <%= current_player == player1 && frame.in_progress? ? 'text-green-400' : 'text-gray-200' %>">
+          <%= p1_score %>
+        </p>
+        <p class="text-xs text-gray-500 mt-0.5">Frames: <%= match.player1_frames %></p>
+      </div>
+
+      <div class="text-center px-3">
+        <% reds = frame.reds_remaining %>
+        <div class="bg-red-900/40 border border-red-800/50 rounded-lg px-3 py-1.5">
+          <p class="text-red-400 font-bold text-lg"><%= reds %></p>
+          <p class="text-red-600 text-xs">reds</p>
+        </div>
+      </div>
+
+      <div class="text-center flex-1">
+        <p class="font-bold text-white <%= current_player == player2 && frame.in_progress? ? 'text-green-400' : '' %>">
+          <%= player2.name %>
+        </p>
+        <p class="text-4xl font-black mt-1 <%= current_player == player2 && frame.in_progress? ? 'text-green-400' : 'text-gray-200' %>">
+          <%= p2_score %>
+        </p>
+        <p class="text-xs text-gray-500 mt-0.5">Frames: <%= match.player2_frames %></p>
+      </div>
+    </div>
+
+    <%# Current break %>
+    <% if current_visit&.active? && frame.in_progress? %>
+      <div class="mt-3 pt-3 border-t border-gray-800 text-center">
+        <p class="text-gray-400 text-xs uppercase tracking-wider">Current break</p>
+        <p class="text-3xl font-black text-yellow-400 mt-1"><%= current_visit.break_score %></p>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Scoring controls (only shown when frame is in progress) %>
+  <% if frame.in_progress? && current_visit&.active? %>
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 space-y-4">
+      <div class="flex items-center justify-between">
+        <p class="text-sm font-semibold text-gray-300">
+          Potting: <span class="text-green-400"><%= current_player&.name %></span>
+        </p>
+      </div>
+
+      <%# Ball buttons %>
+      <div>
+        <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Pot ball</p>
+        <div class="grid grid-cols-4 gap-2">
+          <%= render "frames/ball_button", visit: current_visit, ball: :red, label: "Red", value: 1, color: "bg-red-700 hover:bg-red-600 active:bg-red-800" %>
+          <%= render "frames/ball_button", visit: current_visit, ball: :yellow, label: "Yellow", value: 2, color: "bg-yellow-500 hover:bg-yellow-400 active:bg-yellow-600 text-gray-900" %>
+          <%= render "frames/ball_button", visit: current_visit, ball: :green, label: "Green", value: 3, color: "bg-green-700 hover:bg-green-600 active:bg-green-800" %>
+          <%= render "frames/ball_button", visit: current_visit, ball: :brown, label: "Brown", value: 4, color: "bg-amber-800 hover:bg-amber-700 active:bg-amber-900" %>
+        </div>
+        <div class="grid grid-cols-3 gap-2 mt-2">
+          <%= render "frames/ball_button", visit: current_visit, ball: :blue, label: "Blue", value: 5, color: "bg-blue-700 hover:bg-blue-600 active:bg-blue-800" %>
+          <%= render "frames/ball_button", visit: current_visit, ball: :pink, label: "Pink", value: 6, color: "bg-pink-600 hover:bg-pink-500 active:bg-pink-700" %>
+          <%= render "frames/ball_button", visit: current_visit, ball: :black, label: "Black", value: 7, color: "bg-gray-700 hover:bg-gray-600 active:bg-gray-800 border border-gray-600" %>
+        </div>
+        <%# Free ball %>
+        <div class="mt-2">
+          <%= button_to visit_shots_path(current_visit),
+              method: :post,
+              params: { shot: { ball: :free_ball, result: :potted } },
+              class: "w-full bg-purple-700 hover:bg-purple-600 active:bg-purple-800 text-white font-semibold py-3 rounded-xl transition-colors text-sm",
+              data: { turbo_stream: true } do %>
+            Free Ball
+          <% end %>
+        </div>
+      </div>
+
+      <%# Foul row %>
+      <div>
+        <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Foul</p>
+        <div class="grid grid-cols-4 gap-2">
+          <% [4, 5, 6, 7].each do |val| %>
+            <%= button_to visit_shots_path(current_visit),
+                method: :post,
+                params: { shot: { ball: :red, result: :foul, foul_value: val } },
+                class: "bg-orange-800 hover:bg-orange-700 active:bg-orange-900 text-white font-bold py-3 rounded-xl transition-colors",
+                data: { turbo_stream: true } do %>
+              Foul +<%= val %>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+
+      <%# End visit %>
+      <div class="grid grid-cols-2 gap-3 pt-2 border-t border-gray-800">
+        <%= button_to "Miss / End Visit", end_visit_frame_path(frame),
+            method: :post, params: { ended_by: :miss },
+            class: "bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded-xl transition-colors text-sm",
+            data: { turbo_stream: true } %>
+        <div class="relative" data-controller="dropdown">
+          <button data-action="dropdown#toggle" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded-xl transition-colors text-sm">
+            End Frame ▾
+          </button>
+          <div data-dropdown-target="menu" class="hidden absolute bottom-full mb-1 left-0 right-0 bg-gray-800 border border-gray-700 rounded-xl overflow-hidden z-10">
+            <%= button_to "#{player1.name} wins", complete_frame_path(frame),
+                method: :post, params: { winner_id: player1.id },
+                class: "w-full text-left px-4 py-3 hover:bg-gray-700 text-green-400 font-medium text-sm" %>
+            <%= button_to "#{player2.name} wins", complete_frame_path(frame),
+                method: :post, params: { winner_id: player2.id },
+                class: "w-full text-left px-4 py-3 hover:bg-gray-700 text-green-400 font-medium text-sm" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% elsif frame.completed? %>
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 text-center">
+      <p class="text-green-400 font-bold text-lg">Frame complete</p>
+      <% if frame.winner %>
+        <p class="text-gray-300 mt-1"><%= frame.winner.name %> wins this frame</p>
+      <% end %>
+      <%= link_to "Back to match →", match_path(match), class: "mt-4 inline-block text-green-400 hover:text-green-300 font-medium" %>
+    </div>
+  <% end %>
+
+  <%# Visit history (last few visits) %>
+  <% recent_visits = frame.visits.includes(:shots).order(visit_number: :desc).first(5).reverse %>
+  <% if recent_visits.any? %>
+    <div>
+      <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Recent visits</h3>
+      <div class="space-y-2">
+        <% recent_visits.each do |visit| %>
+          <div class="bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-300 font-medium"><%= visit.player.name %></span>
+              <% if visit.ended_by %>
+                <span class="text-xs text-gray-600 capitalize">(<%= visit.ended_by %>)</span>
+              <% end %>
+            </div>
+            <div class="flex items-center gap-1">
+              <% visit.shots.each do |shot| %>
+                <span class="<%= ball_dot_color(shot.ball) %> w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold"
+                      title="<%= shot.ball.humanize %>: <%= shot.result == 'foul' ? "Foul +#{shot.foul_value}" : "+#{shot.points}" %>">
+                  <%= shot.result == 'foul' ? 'F' : shot.points %>
+                </span>
+              <% end %>
+              <span class="text-yellow-400 font-bold ml-2 text-sm"><%= visit.break_score %></span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

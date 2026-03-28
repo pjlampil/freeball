@@ -1,0 +1,8 @@
+<%= button_to visit_shots_path(visit),
+    method: :post,
+    params: { shot: { ball: ball, result: :potted } },
+    class: "#{color} text-white font-bold py-4 rounded-xl transition-colors flex flex-col items-center",
+    data: { turbo_stream: true } do %>
+  <span class="text-lg leading-none"><%= label %></span>
+  <span class="text-xs opacity-75 mt-0.5">+<%= value %></span>
+<% end %>

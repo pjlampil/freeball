@@ -1,0 +1,76 @@
+<% content_for :title, "Match" %>
+
+<div class="space-y-6">
+  <div class="flex items-center gap-3">
+    <%= link_to "←", matches_path, class: "text-gray-400 hover:text-white text-xl" %>
+    <span class="text-xs font-medium px-2 py-0.5 rounded-full <%= match_status_badge(@match) %>">
+      <%= @match.status.humanize %>
+    </span>
+  </div>
+
+  <%# Score header %>
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+    <div class="flex items-center justify-between">
+      <div class="text-center flex-1">
+        <p class="text-lg font-bold text-white"><%= @match.player1.name %></p>
+        <p class="text-5xl font-black text-green-400 mt-2"><%= @match.player1_frames %></p>
+      </div>
+      <div class="text-center px-4">
+        <p class="text-gray-500 text-sm">
+          <% if @match.best_of %>
+            Best of <%= @match.best_of %>
+          <% else %>
+            Open
+          <% end %>
+        </p>
+      </div>
+      <div class="text-center flex-1">
+        <p class="text-lg font-bold text-white"><%= @match.player2.name %></p>
+        <p class="text-5xl font-black text-green-400 mt-2"><%= @match.player2_frames %></p>
+      </div>
+    </div>
+
+    <% if @match.completed? && @match.winner %>
+      <div class="mt-4 text-center">
+        <p class="text-green-400 font-semibold">🏆 <%= @match.winner.name %> wins!</p>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Action %>
+  <% if @match.pending? %>
+    <%= button_to "Start Match", start_match_path(@match), method: :post,
+        class: "w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors" %>
+  <% elsif @match.in_progress? && @match.current_frame %>
+    <%= link_to "Continue Scoring →", frame_path(@match.current_frame),
+        class: "block w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors text-center" %>
+  <% end %>
+
+  <%# Frames history %>
+  <% if @match.frames.any? %>
+    <div>
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Frames</h2>
+      <div class="space-y-2">
+        <% @match.frames.order(:frame_number).each do |frame| %>
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+            <span class="text-gray-500 text-sm">Frame <%= frame.frame_number %></span>
+            <div class="flex items-center gap-4">
+              <span class="font-bold text-lg <%= frame.winner == @match.player1 ? 'text-green-400' : 'text-gray-300' %>">
+                <%= frame.player1_score %>
+              </span>
+              <span class="text-gray-600">–</span>
+              <span class="font-bold text-lg <%= frame.winner == @match.player2 ? 'text-green-400' : 'text-gray-300' %>">
+                <%= frame.player2_score %>
+              </span>
+            </div>
+            <% if frame.completed? && frame.winner %>
+              <span class="text-xs text-green-400 font-medium"><%= frame.winner.name %></span>
+            <% elsif frame.in_progress? %>
+              <%= link_to "Score", frame_path(frame), class: "text-xs text-green-400 hover:text-green-300 font-medium" %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

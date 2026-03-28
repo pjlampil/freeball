@@ -1,0 +1,19 @@
+<% content_for :title, "Frame #{@frame.frame_number}" %>
+
+<div data-controller="frame-scorer"
+     data-frame-scorer-match-id-value="<%= @match.id %>"
+     data-frame-scorer-frame-id-value="<%= @frame.id %>">
+
+  <%# Header %>
+  <div class="flex items-center gap-3 mb-4">
+    <%= link_to "←", match_path(@match), class: "text-gray-400 hover:text-white text-xl" %>
+    <h1 class="text-lg font-bold">Frame <%= @frame.frame_number %></h1>
+    <% if @match.best_of %>
+      <span class="text-gray-500 text-sm">Best of <%= @match.best_of %></span>
+    <% end %>
+  </div>
+
+  <div id="frame-<%= @frame.id %>">
+    <%= render "frames/frame", frame: @frame %>
+  </div>
+</div>
