@@ -32,6 +32,9 @@
       <% if user_signed_in? %>
         <div class="flex items-center gap-3">
           <span class="text-gray-400 text-sm hidden sm:block"><%= current_user.name %></span>
+          <% if current_user.superuser? %>
+            <%= link_to "Users", users_path, class: "text-gray-400 hover:text-white text-sm transition-colors hidden sm:block" %>
+          <% end %>
           <%= link_to "New Match", new_match_path, class: "bg-green-600 hover:bg-green-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors" %>
           <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "text-gray-400 hover:text-white text-sm transition-colors" %>
         </div>

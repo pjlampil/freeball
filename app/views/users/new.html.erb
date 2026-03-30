@@ -1,0 +1,49 @@
+<% content_for :title, "New User" %>
+
+<div>
+  <div class="flex items-center gap-3 mb-6">
+    <%= link_to "←", users_path, class: "text-gray-400 hover:text-white text-xl" %>
+    <h1 class="text-2xl font-bold">New User</h1>
+  </div>
+
+  <%= form_with model: @user, class: "space-y-5" do |f| %>
+    <% if @user.errors.any? %>
+      <div class="bg-red-900/50 border border-red-700 rounded-xl p-4">
+        <ul class="text-red-300 text-sm space-y-1">
+          <% @user.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+      <div>
+        <%= f.label :name, "Name", class: "block text-sm text-gray-400 mb-1" %>
+        <%= f.text_field :name, class: "w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-green-500", autocomplete: "off" %>
+      </div>
+
+      <div>
+        <%= f.label :email, "Email", class: "block text-sm text-gray-400 mb-1" %>
+        <%= f.email_field :email, class: "w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-green-500", autocomplete: "off" %>
+      </div>
+
+      <div>
+        <%= f.label :password, "Password", class: "block text-sm text-gray-400 mb-1" %>
+        <%= f.password_field :password, class: "w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-green-500", autocomplete: "new-password" %>
+      </div>
+
+      <div>
+        <%= f.label :password_confirmation, "Confirm password", class: "block text-sm text-gray-400 mb-1" %>
+        <%= f.password_field :password_confirmation, class: "w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-green-500", autocomplete: "new-password" %>
+      </div>
+
+      <label class="flex items-center gap-3 cursor-pointer">
+        <%= f.check_box :superuser, class: "w-4 h-4 rounded accent-green-500" %>
+        <span class="text-sm text-gray-300">Superuser (can manage users)</span>
+      </label>
+    </div>
+
+    <%= f.submit "Create User", class: "w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors cursor-pointer" %>
+  <% end %>
+</div>

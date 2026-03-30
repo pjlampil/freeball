@@ -19,7 +19,8 @@
       "Bash(bin/rails generate:*)",
       "Bash(bin/rails db:migrate 2>&1)",
       "Bash(bin/rails runner:*)",
-      "Bash(bin/rails routes:*)"
+      "Bash(bin/rails routes:*)",
+      "Bash(find /Users/pekkalampila/code/freeball/app/controllers -name *admin* -o -name *user*)"
     ]
   }
 }

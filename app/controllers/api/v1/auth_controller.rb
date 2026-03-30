@@ -1,7 +1,9 @@
 class Api::V1::AuthController < ActionController::API
-  before_action :authenticate_user!, only: [ :logout ]
+  before_action :authenticate_user!, only: [ :logout, :register ]
 
   def register
+    return render json: { error: "Not authorized." }, status: :forbidden unless current_user&.superuser?
+
     user = User.new(register_params)
     if user.save
       token = Warden::JWTAuth::UserEncoder.new.call(user, :user, nil).first
