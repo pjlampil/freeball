@@ -11,17 +11,31 @@ class Frame < ApplicationRecord
 
   def duration
     return nil unless started_at && completed_at
-    (completed_at - started_at).to_i
+    [ (completed_at - started_at).to_i - total_paused_seconds, 0 ].max
   end
 
   def reds_phase_duration
     return nil unless started_at && reds_cleared_at
-    (reds_cleared_at - started_at).to_i
+    [ (reds_cleared_at - started_at).to_i - total_paused_seconds, 0 ].max
   end
 
   def colors_phase_duration
     return nil unless reds_cleared_at && completed_at
     (completed_at - reds_cleared_at).to_i
+  end
+
+  def clock_running?
+    started_at.present? && paused_at.nil? && in_progress?
+  end
+
+  def clock_paused?
+    paused_at.present?
+  end
+
+  def elapsed_seconds
+    return nil unless started_at
+    endpoint = completed_at || paused_at || Time.current
+    [ (endpoint - started_at).to_i - total_paused_seconds, 0 ].max
   end
 
   def score_for(player)

@@ -6,6 +6,9 @@
   <% if @match.best_of %>
     <span class="text-gray-500 text-sm">Best of <%= @match.best_of %></span>
   <% end %>
+  <% if @frame.started_at %>
+    <span id="frame-elapsed" class="ml-auto text-gray-500 text-sm font-mono tabular-nums"><%= "Frame #{format_duration(@frame.elapsed_seconds)}" %></span>
+  <% end %>
 </div>
 
 <%= render "frames/frame", frame: @frame %>
@@ -16,6 +19,7 @@
     <%= render "shared/stats_table", p1_stats: @p1_stats, p2_stats: @p2_stats %>
   </div>
 <% end %>
+
 
 <script type="module">
   // Submit any form inside the scoring frame without a full page load.

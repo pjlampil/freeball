@@ -1,4 +1,4 @@
-<% content_for :title, "Match" %>
+<% content_for :title, "#{@match.player1.name} vs #{@match.player2.name}" %>
 
 <div class="space-y-6">
   <div class="flex items-center gap-3">
@@ -8,6 +8,14 @@
     <span class="text-xs font-medium px-2 py-0.5 rounded-full <%= match_status_badge(@match) %>">
       <%= @match.status.humanize %>
     </span>
+    <% if user_signed_in? && (@match.player1 == current_user || @match.player2 == current_user) %>
+      <div class="ml-auto flex items-center gap-2">
+        <%= link_to "Edit", edit_match_path(@match), class: "text-xs text-gray-500 hover:text-gray-300 transition-colors" %>
+        <%= button_to "Delete", match_path(@match), method: :delete,
+            form: { data: { turbo_confirm: "Delete this match and all its data? This cannot be undone." } },
+            class: "text-xs text-red-700 hover:text-red-400 transition-colors bg-transparent border-0 cursor-pointer p-0" %>
+      </div>
+    <% end %>
   </div>
 
   <%# Score header %>
@@ -18,7 +26,7 @@
         <p class="text-5xl font-black text-green-400 mt-2"><%= @match.player1_frames %></p>
       </div>
       <div class="text-center px-4 flex flex-col items-center gap-1.5">
-        <p class="text-gray-500 text-sm">
+        <p class="text-gray-500 text-sm mb-4">
           <% if @match.best_of %>
             Best of <%= @match.best_of %>
           <% else %>
@@ -27,12 +35,12 @@
         </p>
         <% unless @match.standard? %>
           <p class="text-gray-600 text-xs">
-            <%= @match.reds_count %> reds<%= " — stop at last" if @match.stop_after_reds? %>
+            <%= @match.reds_count %> reds<%= " — stop at last red" if @match.stop_after_reds? %>
           </p>
         <% end %>
         <% if @match.in_progress? && @match.granular? && @match.current_frame %>
           <span class="text-xs font-semibold text-gray-400 bg-gray-800 border border-gray-700 px-2 py-0.5 rounded-full tabular-nums">
-            <%= @match.current_frame.remaining_points %> rem
+            <%= @match.current_frame.remaining_points %> remaining
           </span>
         <% end %>
       </div>
@@ -47,21 +55,27 @@
         <p class="text-green-400 font-semibold">🏆 <%= @match.winner.name %> wins!</p>
       </div>
     <% end %>
-
   </div>
 
-  <%# Action %>
-  <% if user_signed_in? %>
-    <% if @match.pending? %>
-      <%= button_to "Start Match", start_match_path(@match), method: :post,
-          class: "w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors" %>
-    <% elsif @match.in_progress? && @match.current_frame %>
-      <%= link_to "Score this match →", frame_path(@match.current_frame),
-          class: "block w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors text-center" %>
-    <% end %>
+  <%# Action buttons %>
+  <% if @match.upcoming? && user_signed_in? %>
+    <%= button_to "Start Match", start_match_path(@match), method: :post,
+        class: "w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors" %>
   <% elsif @match.in_progress? && @match.current_frame %>
-    <%= link_to "Watch live →", frame_path(@match.current_frame),
-        class: "block w-full bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-4 rounded-2xl text-lg transition-colors text-center" %>
+    <div class="flex gap-3">
+      <% if user_signed_in? %>
+        <%= link_to "Score this match →", frame_path(@match.current_frame),
+            class: "flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors text-center" %>
+      <% end %>
+      <%= link_to "Watch live →", watch_match_path(@match),
+          class: "flex-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-4 rounded-2xl text-lg transition-colors text-center" %>
+    </div>
+    <% if user_signed_in? && @match.best_of.nil? && @match.frames.completed.any? &&
+          (@match.player1 == current_user || @match.player2 == current_user) %>
+      <%= button_to "End match", finish_match_path(@match), method: :post,
+          form: { data: { turbo_confirm: "End the match here? No more frames will be added." } },
+          class: "w-full py-3 bg-transparent border border-gray-700 hover:border-red-900 text-gray-500 hover:text-red-400 text-sm font-medium rounded-2xl transition-colors" %>
+    <% end %>
   <% end %>
 
   <%# Frames history %>
@@ -97,5 +111,12 @@
       </div>
     </div>
   <% end %>
-</div>
 
+  <%# Match stats %>
+  <% if @p1_stats %>
+    <div>
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Match stats</h2>
+      <%= render "shared/stats_table", p1_stats: @p1_stats, p2_stats: @p2_stats %>
+    </div>
+  <% end %>
+</div>

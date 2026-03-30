@@ -6,11 +6,59 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Freeball">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="server-time" content="<%= Time.current.to_i %>">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <link rel="icon" href="/icon.png" type="image/png">
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+    <script>
+      function fmtDuration(seconds) {
+        var h = Math.floor(seconds / 3600)
+        var m = Math.floor((seconds % 3600) / 60)
+        return h + ":" + String(m).padStart(2, "0")
+      }
+
+      // Correct for client/server clock skew once on page load
+      var _serverOffset = (function() {
+        var meta = document.querySelector('meta[name="server-time"]')
+        return meta ? parseInt(meta.content) - Math.floor(Date.now() / 1000) : 0
+      })()
+
+      function updateTimers() {
+        var now = Math.floor(Date.now() / 1000) + _serverOffset
+
+        // Frame elapsed header + frame-clock-display in controls partial
+        // Both read state from the clock-controls div (inside the replaced partial, always fresh)
+        var clockDiv = document.querySelector("[data-frame-started-at]")
+        if (clockDiv) {
+          var startedAt   = parseInt(clockDiv.dataset.frameStartedAt  || "0")
+          var totalPaused = parseInt(clockDiv.dataset.frameTotalPaused || "0")
+          var pausedAt    = parseInt(clockDiv.dataset.framePausedAt    || "0")
+          if (startedAt) {
+            var endpoint = pausedAt ? pausedAt : now
+            var elapsed  = Math.max(0, endpoint - startedAt - totalPaused)
+            var frameElapsed = document.getElementById("frame-elapsed")
+            if (frameElapsed) frameElapsed.textContent = "Frame " + fmtDuration(elapsed)
+            var clockDisplay = document.getElementById("frame-clock-display")
+            if (clockDisplay && !pausedAt) clockDisplay.textContent = fmtDuration(elapsed)
+          }
+        }
+
+        // Match elapsed in watch view (element lives inside watch-content, replaced on updates)
+        var matchEl = document.getElementById("match-elapsed")
+        if (matchEl) {
+          var matchStart = parseInt(matchEl.dataset.startedAt || "0")
+          var framePausedAt = parseInt(matchEl.dataset.framePausedAt || "0")
+          if (matchStart) {
+            var matchEndpoint = framePausedAt ? framePausedAt : now
+            matchEl.textContent = "Match " + fmtDuration(Math.max(0, matchEndpoint - matchStart))
+          }
+        }
+      }
+
+      setInterval(updateTimers, 1000)
+    </script>
     <script>
       document.addEventListener("touchmove", function(e) {
         if (e.touches.length > 1) e.preventDefault()

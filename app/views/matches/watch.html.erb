@@ -1,0 +1,135 @@
+<% content_for :title, "#{@match.player1.name} vs #{@match.player2.name}" %>
+
+<div id="watch-content" class="space-y-6">
+
+  <%# Header %>
+  <div class="flex items-center justify-between">
+    <%= link_to "← Match", match_path(@match), class: "text-gray-400 hover:text-white text-sm" %>
+    <div class="flex items-center gap-3">
+      <% if @match_started_at %>
+        <% match_elapsed = [(Time.current - @match_started_at).to_i, 0].max %>
+        <span id="match-elapsed"
+              data-started-at="<%= @match_started_at.to_i %>"
+              data-frame-paused-at="<%= @current_frame&.paused_at&.to_i %>"
+              class="text-gray-500 text-sm font-mono tabular-nums">Match <%= format_duration(match_elapsed) %></span>
+      <% end %>
+      <% if @match.in_progress? %>
+        <span class="text-xs font-medium text-green-400 bg-green-950/50 border border-green-900/50 px-2 py-1 rounded-full animate-pulse">Live</span>
+      <% elsif @match.completed? %>
+        <span class="text-xs font-medium text-gray-400 bg-gray-800 border border-gray-700 px-2 py-1 rounded-full">Completed</span>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Match frame score %>
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+    <div class="flex items-center justify-between">
+      <div class="text-center flex-1">
+        <p class="text-lg font-bold text-white"><%= @match.player1.name %></p>
+        <p class="text-5xl font-black text-green-400 mt-2"><%= @match.player1_frames %></p>
+      </div>
+      <div class="text-center px-4 flex flex-col items-center gap-1.5">
+        <p class="text-gray-500 text-sm">
+          <% if @match.best_of %>Best of <%= @match.best_of %><% else %>Open<% end %>
+        </p>
+        <% unless @match.standard? %>
+          <p class="text-gray-600 text-xs">
+            <%= @match.reds_count %> reds<%= " — stop at last red" if @match.stop_after_reds? %>
+          </p>
+        <% end %>
+      </div>
+      <div class="text-center flex-1">
+        <p class="text-lg font-bold text-white"><%= @match.player2.name %></p>
+        <p class="text-5xl font-black text-green-400 mt-2"><%= @match.player2_frames %></p>
+      </div>
+    </div>
+    <% if @match.completed? && @match.winner %>
+      <div class="mt-4 text-center">
+        <p class="text-green-400 font-semibold">🏆 <%= @match.winner.name %> wins!</p>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Current frame scoreboard %>
+  <% if @current_frame %>
+    <div>
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+        Frame <%= @current_frame.frame_number %>
+      </h2>
+      <%= render "frames/scoreboard", frame: @current_frame %>
+    </div>
+  <% end %>
+
+  <%# Match stats %>
+  <% if @p1_stats %>
+    <div>
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Match stats</h2>
+      <div id="watch-stats">
+        <%= render "shared/stats_table", p1_stats: @p1_stats, p2_stats: @p2_stats %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Recent visits %>
+  <% if @current_frame && @match.granular? %>
+    <div id="watch-recent-visits">
+      <%= render "frames/recent_visits", frame: @current_frame %>
+    </div>
+  <% end %>
+
+  <% if user_signed_in? && @match.in_progress? && @current_frame %>
+    <div class="pt-2 border-t border-gray-800">
+      <%= link_to "Score this match →", frame_path(@current_frame),
+          class: "block w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-2xl text-base transition-colors text-center" %>
+    </div>
+  <% end %>
+
+</div>
+
+<% if @match.in_progress? %>
+  <script type="module">
+    const { default: consumer } = await import("channels/consumer")
+    let currentFrameId = <%= @current_frame&.id || "null" %>
+
+    consumer.subscriptions.create(
+      { channel: "MatchChannel", match_id: <%= @match.id %> },
+      {
+        received(data) {
+          // If the frame changed, re-fetch the whole watch page
+          if (data.frame_id && data.frame_id !== currentFrameId) {
+            fetch(window.location.href, { headers: { "Accept": "text/html" } })
+              .then(r => r.text())
+              .then(html => {
+                const doc = new DOMParser().parseFromString(html, "text/html")
+                const fresh = doc.getElementById("watch-content")
+                const el = document.getElementById("watch-content")
+                if (fresh && el) el.innerHTML = fresh.innerHTML
+                currentFrameId = data.frame_id
+              })
+            return
+          }
+
+          // Same frame — update pause state on match-elapsed
+          var matchEl = document.getElementById("match-elapsed")
+          if (matchEl && data.frame_paused_at !== undefined) {
+            matchEl.dataset.framePausedAt = data.frame_paused_at || ""
+          }
+
+          // Same frame — swap scoreboard, stats, and recent visits in-place
+          if (data.scoreboard_html) {
+            const el = document.getElementById(`scoreboard-${data.frame_id}`)
+            if (el) el.outerHTML = data.scoreboard_html
+          }
+          if (data.stats_html) {
+            const el = document.getElementById("watch-stats")
+            if (el) el.innerHTML = data.stats_html
+          }
+          if (data.recent_visits_html !== undefined) {
+            const el = document.getElementById("watch-recent-visits")
+            if (el) el.innerHTML = data.recent_visits_html
+          }
+        }
+      }
+    )
+  </script>
+<% end %>

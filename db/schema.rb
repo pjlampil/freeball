@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_30_195512) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_30_221057) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -20,12 +20,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_30_195512) do
     t.bigint "first_to_break_id"
     t.integer "frame_number", null: false
     t.bigint "match_id", null: false
+    t.datetime "paused_at"
     t.bigint "pending_winner_id"
     t.datetime "reds_cleared_at"
     t.integer "removed_reds", default: 0, null: false
     t.boolean "respotted_black", default: false, null: false
     t.datetime "started_at"
     t.integer "status", default: 0, null: false
+    t.integer "total_paused_seconds", default: 0, null: false
     t.datetime "updated_at", null: false
     t.bigint "winner_id"
     t.index ["first_to_break_id"], name: "index_frames_on_first_to_break_id"

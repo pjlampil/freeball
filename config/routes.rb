@@ -8,7 +8,7 @@ Rails.application.routes.draw do
   # Web UI
   root "matches#index"
 
-  resources :matches, only: [ :index, :show, :new, :create ] do
+  resources :matches, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
     resources :frames, only: [ :show ], shallow: true do
       resources :visits, only: [ :create ] do
         resources :shots, only: [ :create ]
@@ -21,11 +21,15 @@ Rails.application.routes.draw do
         post :undo
         post :remove_red
         post :restore_red
+        post :start_clock
+        post :pause_clock
       end
     end
     member do
       get  :stats
+      get  :watch
       post :start
+      post :finish
     end
   end
 

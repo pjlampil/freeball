@@ -6,7 +6,7 @@ class Match < ApplicationRecord
   has_many :frames, dependent: :destroy
 
   enum :scoring_mode,  { granular: 0, frame_score: 1 }
-  enum :status,        { pending: 0, in_progress: 1, completed: 2 }
+  enum :status,        { upcoming: 0, in_progress: 1, completed: 2 }
   enum :visit_mode,    { breaks_only: 0, all_turns: 1 }
   enum :match_format,  { standard: 0, ten_reds: 1, six_reds: 2, stop_at_last_red: 3 }
 

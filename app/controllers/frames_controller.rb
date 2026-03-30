@@ -32,7 +32,13 @@ class FramesController < ApplicationController
 
     if match.stop_after_reds? && @frame.reds_remaining == 0
       visit.update!(ended_by: ended_by)
-      @frame.update!(pending_winner: @frame.score_winner)
+      if @frame.score_winner
+        @frame.update!(pending_winner: @frame.score_winner)
+      else
+        # Scores level — re-spot the black to decide the frame
+        @frame.update!(respotted_black: true)
+        @frame.visits.create!(player: next_player, visit_number: visit.visit_number + 1)
+      end
       MatchChannel.broadcast_frame_update(@frame)
       respond_to do |format|
         format.json { render json: { ok: true } }
@@ -136,6 +142,33 @@ class FramesController < ApplicationController
     end
   end
 
+  def start_clock
+    return if @frame.started_at.present? || @frame.completed?
+    @frame.update!(started_at: Time.current)
+    MatchChannel.broadcast_frame_update(@frame)
+    respond_to do |format|
+      format.json { render json: { ok: true } }
+      format.any  { render partial: "frames/frame", locals: { frame: @frame.reload } }
+    end
+  end
+
+  def pause_clock
+    return if @frame.completed?
+    if @frame.clock_paused?
+      # Resume: accumulate paused duration
+      paused_seconds = (Time.current - @frame.paused_at).to_i
+      @frame.update!(paused_at: nil, total_paused_seconds: @frame.total_paused_seconds + paused_seconds)
+    elsif @frame.started_at.present?
+      # Pause
+      @frame.update!(paused_at: Time.current)
+    end
+    MatchChannel.broadcast_frame_update(@frame)
+    respond_to do |format|
+      format.json { render json: { ok: true } }
+      format.any  { render partial: "frames/frame", locals: { frame: @frame.reload } }
+    end
+  end
+
   def remove_red
     return if @frame.reds_remaining <= 0
     @frame.increment!(:removed_reds)
@@ -208,21 +241,21 @@ class FramesController < ApplicationController
 
   def check_match_complete(match)
     needed = match.frames_needed_to_win
-    return unless needed
 
-    if match.player1_frames >= needed || match.player2_frames >= needed
+    if needed && (match.player1_frames >= needed || match.player2_frames >= needed)
       match.update!(status: :completed, current_frame: nil)
-    else
-      next_frame_number = match.frames.count + 1
-      next_breaker = @frame.first_to_break == match.player1 ? match.player2 : match.player1
-      new_frame = match.frames.create!(
-        frame_number: next_frame_number,
-        first_to_break: next_breaker,
-        status: :in_progress,
-        started_at: Time.current
-      )
-      match.update!(current_frame: new_frame)
-      new_frame.visits.create!(player: next_breaker, visit_number: 1)
+      return
     end
+
+    # Open-ended match or win threshold not yet reached — start the next frame
+    next_frame_number = match.frames.count + 1
+    next_breaker = @frame.first_to_break == match.player1 ? match.player2 : match.player1
+    new_frame = match.frames.create!(
+      frame_number: next_frame_number,
+      first_to_break: next_breaker,
+      status: :in_progress
+    )
+    match.update!(current_frame: new_frame)
+    new_frame.visits.create!(player: next_breaker, visit_number: 1)
   end
 end

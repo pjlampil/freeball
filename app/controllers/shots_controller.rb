@@ -33,10 +33,16 @@ class ShotsController < ApplicationController
         end
       elsif @shot.foul?
         @visit.update!(ended_by: :foul)
+        next_player = @visit.player == @frame.match.player1 ? @frame.match.player2 : @frame.match.player1
         if @frame.match.stop_after_reds? && @frame.reds_remaining == 0
-          @frame.update!(pending_winner: @frame.score_winner)
+          if @frame.score_winner
+            @frame.update!(pending_winner: @frame.score_winner)
+          else
+            # Scores level — re-spot the black to decide the frame
+            @frame.update!(respotted_black: true)
+            @frame.visits.create!(player: next_player, visit_number: @visit.visit_number + 1)
+          end
         else
-          next_player = @visit.player == @frame.match.player1 ? @frame.match.player2 : @frame.match.player1
           @frame.visits.create!(player: next_player, visit_number: @visit.visit_number + 1)
         end
       end
@@ -64,22 +70,22 @@ class ShotsController < ApplicationController
 
   def check_match_complete(match)
     needed = match.frames_needed_to_win
-    return unless needed
 
-    if match.player1_frames >= needed || match.player2_frames >= needed
+    if needed && (match.player1_frames >= needed || match.player2_frames >= needed)
       match.update!(status: :completed, current_frame: nil)
-    else
-      next_frame_number = match.frames.count + 1
-      next_breaker = @frame.first_to_break == match.player1 ? match.player2 : match.player1
-      new_frame = match.frames.create!(
-        frame_number: next_frame_number,
-        first_to_break: next_breaker,
-        status: :in_progress,
-        started_at: Time.current
-      )
-      match.update!(current_frame: new_frame)
-      new_frame.visits.create!(player: next_breaker, visit_number: 1)
+      return
     end
+
+    # Open-ended match or win threshold not yet reached — start the next frame
+    next_frame_number = match.frames.count + 1
+    next_breaker = @frame.first_to_break == match.player1 ? match.player2 : match.player1
+    new_frame = match.frames.create!(
+      frame_number: next_frame_number,
+      first_to_break: next_breaker,
+      status: :in_progress
+    )
+    match.update!(current_frame: new_frame)
+    new_frame.visits.create!(player: next_breaker, visit_number: 1)
   end
 
   def set_visit

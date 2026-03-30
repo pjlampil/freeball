@@ -1,0 +1,27 @@
+<% recent_visits = frame.visits.includes(:shots, :player).order(visit_number: :desc).first(6).reverse %>
+<% if recent_visits.any? %>
+  <div id="recent-visits-<%= frame.id %>">
+    <h3 class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Recent visits</h3>
+    <div class="space-y-1.5">
+      <% recent_visits.each do |visit| %>
+        <div class="bg-gray-900/60 border border-gray-800/60 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-sm text-gray-300 font-medium truncate"><%= visit.player.name %></span>
+            <% if visit.ended_by %>
+              <span class="text-xs text-gray-700 capitalize shrink-0">(<%= visit.ended_by.humanize %>)</span>
+            <% end %>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <% visit.shots.each do |shot| %>
+              <span class="<%= ball_dot_color(shot.ball) %> w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold shrink-0"
+                    title="<%= shot.ball.humanize %>: <%= shot.foul? ? "Foul +#{shot.foul_value}" : "+#{shot.points}" %>">
+                <%= shot.foul? ? "F" : shot.points %>
+              </span>
+            <% end %>
+            <span class="text-yellow-400 font-bold text-sm ml-1"><%= visit.break_score %></span>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

@@ -21,12 +21,18 @@ class MatchChannel < ApplicationCable::Channel
         p2_stats: Stats.new(match.player2, visits)
       }
     )
+    recent_visits_html = ApplicationController.render(
+      partial: "frames/recent_visits",
+      locals: { frame: frame }
+    )
 
     ActionCable.server.broadcast("match_#{frame.match_id}", {
       type: "frame_update",
       frame_id: frame.id,
+      frame_paused_at: frame.paused_at&.to_i,
       scoreboard_html: scoreboard_html,
-      stats_html: stats_html
+      stats_html: stats_html,
+      recent_visits_html: recent_visits_html
     })
   end
 end

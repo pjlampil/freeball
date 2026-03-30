@@ -1,13 +1,14 @@
 module ApplicationHelper
   def format_duration(seconds)
     return "—" if seconds.nil?
-    m, s = seconds.divmod(60)
-    "#{m}:#{s.to_s.rjust(2, '0')}"
+    h, remainder = seconds.divmod(3600)
+    m = remainder / 60
+    "#{h}:#{m.to_s.rjust(2, '0')}"
   end
 
   def match_status_badge(match)
     case match.status
-    when "pending"     then "bg-gray-700 text-gray-300"
+    when "upcoming"    then "bg-gray-700 text-gray-300"
     when "in_progress" then "bg-green-900 text-green-300"
     when "completed"   then "bg-blue-900 text-blue-300"
     end
