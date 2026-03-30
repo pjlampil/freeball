@@ -1,0 +1,85 @@
+<%# Broadcast target: replaced live for all viewers (scorer + spectators).
+    No auth-gated content here. %>
+<% match = frame.match %>
+<% player1 = match.player1 %>
+<% player2 = match.player2 %>
+<% p1_score = frame.player1_score %>
+<% p2_score = frame.player2_score %>
+<% current_visit = frame.current_visit %>
+<% current_player = frame.current_player %>
+<% remaining = frame.remaining_points %>
+<% diff = frame.point_difference %>
+<% leader = frame.leading_player %>
+<% comeback = frame.comeback_possible? %>
+<% snookers = comeback ? 0 : frame.snookers_needed %>
+
+<div id="scoreboard-<%= frame.id %>" class="space-y-4">
+
+  <%# Score card %>
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+    <div class="flex items-stretch justify-between gap-2">
+
+      <div class="flex-1 text-center">
+        <p class="text-sm font-semibold truncate <%= current_player == player1 && frame.in_progress? ? 'text-green-400' : 'text-gray-300' %>">
+          <%= player1.name %>
+        </p>
+        <p class="text-5xl font-black mt-1 tabular-nums leading-none
+                  <%= current_player == player1 && frame.in_progress? ? 'text-white' : 'text-gray-400' %>">
+          <%= p1_score %>
+        </p>
+        <p class="text-xs text-gray-600 mt-1"><%= pluralize(match.player1_frames, "frame") %></p>
+      </div>
+
+      <div class="flex flex-col items-center justify-center gap-2 px-2">
+        <% reds = frame.reds_remaining %>
+        <div class="bg-red-950/60 border border-red-900/50 rounded-xl px-3 py-1.5 text-center">
+          <span class="text-red-400 font-bold text-xl leading-none"><%= reds %></span>
+          <span class="text-red-700 text-xs block"><%= match.standard? ? "reds" : "/ #{match.reds_count}" %></span>
+        </div>
+        <% break_score = current_visit&.active? && frame.in_progress? ? current_visit.break_score : 0 %>
+          <div class="bg-yellow-950/60 border border-yellow-900/50 rounded-xl px-3 py-1.5 text-center <%= break_score.to_i > 0 ? '' : 'invisible' %>">
+            <span class="text-yellow-400 font-bold text-xl leading-none"><%= break_score %></span>
+            <span class="text-yellow-700 text-xs block">break</span>
+          </div>
+      </div>
+
+      <div class="flex-1 text-center">
+        <p class="text-sm font-semibold truncate <%= current_player == player2 && frame.in_progress? ? 'text-green-400' : 'text-gray-300' %>">
+          <%= player2.name %>
+        </p>
+        <p class="text-5xl font-black mt-1 tabular-nums leading-none
+                  <%= current_player == player2 && frame.in_progress? ? 'text-white' : 'text-gray-400' %>">
+          <%= p2_score %>
+        </p>
+        <p class="text-xs text-gray-600 mt-1"><%= pluralize(match.player2_frames, "frame") %></p>
+      </div>
+
+    </div>
+
+    <% if frame.in_progress? %>
+      <div class="mt-4 pt-3 border-t border-gray-800 flex items-center justify-between gap-2 text-sm">
+        <div>
+          <% if diff == 0 %>
+            <span class="text-gray-400">Tied</span>
+          <% else %>
+            <span class="font-semibold text-white"><%= leader.name %></span>
+            <span class="text-gray-400"> leads by </span>
+            <span class="font-bold text-white"><%= diff %></span>
+          <% end %>
+        </div>
+        <div class="flex flex-col items-end gap-1">
+          <span class="text-xs font-semibold text-gray-400 bg-gray-800 border border-gray-700 px-2 py-0.5 rounded-full tabular-nums">
+            <%= remaining %> remaining
+          </span>
+          <% unless comeback %>
+            <span class="text-xs font-semibold text-red-400 bg-red-950/50 border border-red-900/50 px-2 py-0.5 rounded-full whitespace-nowrap">
+              <%= snookers %> snooker<%= "s" if snookers != 1 %> req'd
+            </span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+
+</div>

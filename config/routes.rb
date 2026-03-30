@@ -14,11 +14,17 @@ Rails.application.routes.draw do
         resources :shots, only: [ :create ]
       end
       member do
+        get  :stats
         post :end_visit
         post :complete
+        post :confirm_result
+        post :undo
+        post :remove_red
+        post :restore_red
       end
     end
     member do
+      get  :stats
       post :start
     end
   end

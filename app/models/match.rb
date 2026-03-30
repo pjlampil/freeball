@@ -5,8 +5,22 @@ class Match < ApplicationRecord
 
   has_many :frames, dependent: :destroy
 
-  enum :scoring_mode, { granular: 0, frame_score: 1 }
-  enum :status, { pending: 0, in_progress: 1, completed: 2 }
+  enum :scoring_mode,  { granular: 0, frame_score: 1 }
+  enum :status,        { pending: 0, in_progress: 1, completed: 2 }
+  enum :visit_mode,    { breaks_only: 0, all_turns: 1 }
+  enum :match_format,  { standard: 0, ten_reds: 1, six_reds: 2, stop_at_last_red: 3 }
+
+  def reds_count
+    case match_format
+    when "six_reds"  then 6
+    when "ten_reds"  then 10
+    else                  15
+    end
+  end
+
+  def stop_after_reds?
+    stop_at_last_red?
+  end
 
   validates :player1, :player2, presence: true
   validate :players_must_be_different

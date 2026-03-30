@@ -9,7 +9,17 @@
       "Bash(sed -i '' 's/frame_visit_shots_path\\(frame, visit\\)/visit_shots_path\\(visit\\)/g' /Users/pekkalampila/code/freeball/app/views/frames/_ball_button.html.erb)",
       "Bash(git init:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m \"Initial Rails 8 snooker scoring app:*)"
+      "Bash(git commit -m \"Initial Rails 8 snooker scoring app:*)",
+      "Read(//Users/pekkalampila/.asdf/installs/ruby/3.4.5/lib/ruby/gems/3.4.0/gems/turbo-rails-2.0.23/app/assets/javascripts/**)",
+      "Bash(find / -name turbo.min.js -path */freeball/*)",
+      "Read(//Users/pekkalampila/**)",
+      "Bash(gem contents:*)",
+      "Bash(grep -o kt=function[^}]*} /Users/pekkalampila/.asdf/installs/ruby/3.4.5/lib/ruby/gems/3.4.0/gems/turbo-rails-2.0.23/app/assets/javascripts/turbo.min.js)",
+      "Bash(grep -o renderStreamMessage[^}]*} /Users/pekkalampila/.asdf/installs/ruby/3.4.5/lib/ruby/gems/3.4.0/gems/turbo-rails-2.0.23/app/assets/javascripts/turbo.min.js)",
+      "Bash(bin/rails generate:*)",
+      "Bash(bin/rails db:migrate 2>&1)",
+      "Bash(bin/rails runner:*)",
+      "Bash(bin/rails routes:*)"
     ]
   }
 }

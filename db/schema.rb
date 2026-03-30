@@ -10,20 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_28_222249) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_30_123257) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "frames", force: :cascade do |t|
+    t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.bigint "first_to_break_id"
     t.integer "frame_number", null: false
     t.bigint "match_id", null: false
+    t.bigint "pending_winner_id"
+    t.datetime "reds_cleared_at"
+    t.integer "removed_reds", default: 0, null: false
+    t.boolean "respotted_black", default: false, null: false
+    t.datetime "started_at"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.bigint "winner_id"
     t.index ["first_to_break_id"], name: "index_frames_on_first_to_break_id"
     t.index ["match_id"], name: "index_frames_on_match_id"
+    t.index ["pending_winner_id"], name: "index_frames_on_pending_winner_id"
     t.index ["winner_id"], name: "index_frames_on_winner_id"
   end
 
@@ -31,11 +38,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_28_222249) do
     t.integer "best_of"
     t.datetime "created_at", null: false
     t.bigint "current_frame_id"
+    t.integer "match_format", default: 0, null: false
     t.bigint "player1_id", null: false
     t.bigint "player2_id", null: false
     t.integer "scoring_mode", default: 0, null: false
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.integer "visit_mode", default: 0, null: false
     t.index ["player1_id"], name: "index_matches_on_player1_id"
     t.index ["player2_id"], name: "index_matches_on_player2_id"
   end
@@ -80,6 +89,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_28_222249) do
 
   add_foreign_key "frames", "matches"
   add_foreign_key "frames", "users", column: "first_to_break_id"
+  add_foreign_key "frames", "users", column: "pending_winner_id"
   add_foreign_key "frames", "users", column: "winner_id"
   add_foreign_key "matches", "users", column: "player1_id"
   add_foreign_key "matches", "users", column: "player2_id"

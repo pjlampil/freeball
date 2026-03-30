@@ -13,21 +13,74 @@ class ShotsController < ApplicationController
     @shot.sequence = @visit.shots.count + 1
 
     if @shot.save
+      @frame.reload
+
+      if @shot.potted? && @shot.red? && @frame.reds_remaining == 0 && @frame.reds_cleared_at.nil?
+        @frame.update!(reds_cleared_at: Time.current)
+        @frame.reload
+      end
+
+      if frame_over?
+        if !@frame.respotted_black? && @frame.score_winner.nil?
+          # Scores level after last black — re-spot
+          @visit.update!(ended_by: @shot.foul? ? :foul : :frame_end)
+          next_player = @visit.player == @frame.match.player1 ? @frame.match.player2 : @frame.match.player1
+          @frame.update!(respotted_black: true)
+          @frame.visits.create!(player: next_player, visit_number: @visit.visit_number + 1)
+        else
+          @visit.update!(ended_by: @shot.foul? ? :foul : :frame_end)
+          @frame.update!(pending_winner: @frame.score_winner)
+        end
+      elsif @shot.foul?
+        @visit.update!(ended_by: :foul)
+        if @frame.match.stop_after_reds? && @frame.reds_remaining == 0
+          @frame.update!(pending_winner: @frame.score_winner)
+        else
+          next_player = @visit.player == @frame.match.player1 ? @frame.match.player2 : @frame.match.player1
+          @frame.visits.create!(player: next_player, visit_number: @visit.visit_number + 1)
+        end
+      end
+
       MatchChannel.broadcast_frame_update(@frame)
       respond_to do |format|
-        format.html { redirect_to frame_path(@frame) }
-        format.turbo_stream { render turbo_stream: turbo_stream.replace("frame-#{@frame.id}", partial: "frames/frame", locals: { frame: @frame.reload }) }
         format.json { render json: @shot, status: :created }
+        format.any  { render partial: "frames/frame", locals: { frame: @frame.reload } }
       end
     else
       respond_to do |format|
-        format.html { redirect_to frame_path(@frame), alert: @shot.errors.full_messages.join(", ") }
         format.json { render json: { errors: @shot.errors }, status: :unprocessable_entity }
+        format.any { redirect_to frame_path(@frame), alert: @shot.errors.full_messages.join(", ") }
       end
     end
   end
 
   private
+
+  def frame_over?
+    return (@shot.potted? || @shot.foul?) if @frame.respotted_black?
+    (@shot.potted? && @frame.valid_balls.empty?) ||
+      (@shot.foul? && @frame.black_is_last_remaining?)
+  end
+
+  def check_match_complete(match)
+    needed = match.frames_needed_to_win
+    return unless needed
+
+    if match.player1_frames >= needed || match.player2_frames >= needed
+      match.update!(status: :completed, current_frame: nil)
+    else
+      next_frame_number = match.frames.count + 1
+      next_breaker = @frame.first_to_break == match.player1 ? match.player2 : match.player1
+      new_frame = match.frames.create!(
+        frame_number: next_frame_number,
+        first_to_break: next_breaker,
+        status: :in_progress,
+        started_at: Time.current
+      )
+      match.update!(current_frame: new_frame)
+      new_frame.visits.create!(player: next_breaker, visit_number: 1)
+    end
+  end
 
   def set_visit
     @visit = Visit.find(params[:visit_id])

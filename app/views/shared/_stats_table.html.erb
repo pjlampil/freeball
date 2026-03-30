@@ -1,0 +1,68 @@
+<%# Locals: p1_stats (Stats), p2_stats (Stats) %>
+
+<% stat_row = ->(label, v1, v2, higher_is_better: true, fmt: nil) do
+     v1_str = v1.nil? ? "—" : "#{v1}#{fmt}"
+     v2_str = v2.nil? ? "—" : "#{v2}#{fmt}"
+     v1_win = !v1.nil? && !v2.nil? && v1 != v2 && (higher_is_better ? v1 > v2 : v1 < v2)
+     v2_win = !v1.nil? && !v2.nil? && v1 != v2 && (higher_is_better ? v2 > v1 : v2 < v1)
+     [label, v1_str, v2_str, v1_win, v2_win]
+   end %>
+
+<% threshold_rows = [
+     ["10+ breaks",       p1_stats.breaks_10_plus, p2_stats.breaks_10_plus],
+     ["20+ breaks",       p1_stats.breaks_20_plus, p2_stats.breaks_20_plus],
+     ["30+ breaks",       p1_stats.breaks_30_plus, p2_stats.breaks_30_plus],
+     ["40+ breaks",       p1_stats.breaks_40_plus, p2_stats.breaks_40_plus],
+     ["50+ breaks",       p1_stats.breaks_50_plus, p2_stats.breaks_50_plus],
+     ["Centuries (100+)", p1_stats.centuries,       p2_stats.centuries],
+   ].select { |_, v1, v2| v1 > 0 || v2 > 0 }
+    .map    { |label, v1, v2| stat_row.(label, v1, v2) } %>
+
+<% rows = [
+     stat_row.("Total score",         p1_stats.total_score,          p2_stats.total_score),
+     stat_row.("Points from pots",    p1_stats.points_from_pots,     p2_stats.points_from_pots),
+     stat_row.("Points from fouls",   p1_stats.points_from_fouls,    p2_stats.points_from_fouls),
+     :divider,
+     stat_row.("Balls potted",        p1_stats.balls_potted,         p2_stats.balls_potted),
+     stat_row.("Reds potted",         p1_stats.reds_potted,          p2_stats.reds_potted),
+     stat_row.("Colours potted",      p1_stats.colors_potted,        p2_stats.colors_potted),
+     stat_row.("Free balls potted",   p1_stats.free_balls_potted,    p2_stats.free_balls_potted),
+     :divider,
+     stat_row.("Highest break",       p1_stats.highest_break,        p2_stats.highest_break),
+     stat_row.("Breaks",              p1_stats.number_of_breaks,     p2_stats.number_of_breaks),
+     *threshold_rows,
+     :divider,
+     stat_row.("Fouls committed",     p1_stats.fouls_committed,      p2_stats.fouls_committed,      higher_is_better: false),
+     stat_row.("Foul pts conceded",   p1_stats.foul_points_conceded, p2_stats.foul_points_conceded, higher_is_better: false),
+   ] %>
+
+<div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+  <table class="w-full border-collapse table-fixed">
+    <colgroup>
+      <col style="width:42%">
+      <col style="width:16%">
+      <col style="width:42%">
+    </colgroup>
+    <thead>
+      <tr class="border-b border-gray-800">
+        <th class="text-left text-sm font-bold text-white px-4 py-3"><%= p1_stats.player.name %></th>
+        <th class="text-center text-xs text-gray-600 uppercase tracking-wider px-1 py-3">Stat</th>
+        <th class="text-right text-sm font-bold text-white px-4 py-3"><%= p2_stats.player.name %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.each_with_index do |row, i| %>
+        <% if row == :divider %>
+          <tr><td colspan="3" class="border-t border-gray-800/60 p-0"></td></tr>
+        <% else %>
+          <% label, v1, v2, v1_win, v2_win = row %>
+          <tr class="<%= i.odd? ? 'bg-gray-900/60' : '' %>">
+            <td class="text-left text-sm font-semibold tabular-nums px-4 py-2.5 <%= v1_win ? 'text-green-400' : 'text-gray-300' %>"><%= v1 %></td>
+            <td class="text-center text-xs text-gray-600 px-1 py-2.5"><%= label %></td>
+            <td class="text-right text-sm font-semibold tabular-nums px-4 py-2.5 <%= v2_win ? 'text-green-400' : 'text-gray-300' %>"><%= v2 %></td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+</div>

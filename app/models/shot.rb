@@ -18,7 +18,11 @@ class Shot < ApplicationRecord
 
   def set_points
     if potted?
-      self.points = BALL_VALUES[ball.to_sym] || 0
+      if free_ball?
+        self.points = visit.frame.free_ball_value
+      else
+        self.points = BALL_VALUES[ball.to_sym] || 0
+      end
     elsif foul?
       self.points = 0  # points go to opponent; tracked via foul_value
     end

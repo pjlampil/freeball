@@ -8,3 +8,8 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}

@@ -47,6 +47,26 @@
       </div>
 
       <div>
+        <%= f.label :match_format, "Format", class: "block text-sm text-gray-400 mb-1" %>
+        <div class="grid grid-cols-2 gap-3">
+          <% [
+               [:standard,        "15 reds",           "Standard"],
+               [:ten_reds,        "10 reds",            "Shorter format"],
+               [:six_reds,        "6 reds",             "Quick format"],
+               [:stop_at_last_red,"15 reds — stop",    "Ends when last red potted"],
+             ].each do |value, title, subtitle| %>
+            <label class="relative cursor-pointer">
+              <%= f.radio_button :match_format, value, class: "sr-only peer" %>
+              <div class="peer-checked:bg-green-600 peer-checked:border-green-500 bg-gray-800 border border-gray-700 rounded-xl p-3 text-center transition-colors">
+                <div class="font-medium text-sm"><%= title %></div>
+                <div class="text-gray-400 text-xs mt-0.5"><%= subtitle %></div>
+              </div>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <div>
         <%= f.label :scoring_mode, "Scoring mode", class: "block text-sm text-gray-400 mb-1" %>
         <div class="grid grid-cols-2 gap-3">
           <label class="relative cursor-pointer">
@@ -66,6 +86,28 @@
         </div>
       </div>
     </div>
+
+    <% if @match.granular? || @match.scoring_mode.nil? %>
+      <div id="visit-mode-section" class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+        <h2 class="font-semibold text-gray-300 text-sm uppercase tracking-wider">Visit tracking</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="relative cursor-pointer">
+            <%= f.radio_button :visit_mode, :breaks_only, class: "sr-only peer", checked: true %>
+            <div class="peer-checked:bg-green-600 peer-checked:border-green-500 bg-gray-800 border border-gray-700 rounded-xl p-3 text-center transition-colors">
+              <div class="font-medium text-sm">Breaks only</div>
+              <div class="text-gray-400 text-xs mt-0.5">Visit logged when balls are potted</div>
+            </div>
+          </label>
+          <label class="relative cursor-pointer">
+            <%= f.radio_button :visit_mode, :all_turns, class: "sr-only peer" %>
+            <div class="peer-checked:bg-green-600 peer-checked:border-green-500 bg-gray-800 border border-gray-700 rounded-xl p-3 text-center transition-colors">
+              <div class="font-medium text-sm">All turns</div>
+              <div class="text-gray-400 text-xs mt-0.5">Every approach logged</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    <% end %>
 
     <%= f.submit "Create Match", class: "w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors cursor-pointer" %>
   <% end %>

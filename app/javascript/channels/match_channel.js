@@ -1,15 +1,9 @@
+// MatchChannel is used by native/API clients only.
+// Web live updates are handled by turbo_stream_from in frames/show.html.erb.
 import consumer from "channels/consumer"
 
 consumer.subscriptions.create("MatchChannel", {
-  connected() {
-    // Called when the subscription is ready for use on the server
-  },
-
-  disconnected() {
-    // Called when the subscription has been terminated by the server
-  },
-
   received(data) {
-    // Called when there's incoming data on the websocket for this channel
+    // Native app hook: data = { type: "frame_update", frame_id: N }
   }
 });

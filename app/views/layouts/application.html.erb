@@ -2,7 +2,7 @@
 <html>
   <head>
     <title><%= content_for(:title) || "Freeball" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Freeball">
     <meta name="mobile-web-app-capable" content="yes">
@@ -11,9 +11,20 @@
     <link rel="icon" href="/icon.png" type="image/png">
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+    <script>
+      document.addEventListener("touchmove", function(e) {
+        if (e.touches.length > 1) e.preventDefault()
+      }, { passive: false })
+      var lastTouchEnd = 0
+      document.addEventListener("touchend", function(e) {
+        var now = Date.now()
+        if (now - lastTouchEnd < 300) e.preventDefault()
+        lastTouchEnd = now
+      }, { passive: false })
+    </script>
   </head>
 
-  <body class="bg-gray-950 text-white min-h-screen">
+  <body class="bg-gray-950 text-white min-h-screen overflow-x-hidden">
     <nav class="bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center justify-between sticky top-0 z-50">
       <a href="<%= root_path %>" class="text-green-400 font-bold text-xl tracking-tight">
         🎱 Freeball
