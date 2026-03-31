@@ -28,31 +28,30 @@
       function updateTimers() {
         var now = Math.floor(Date.now() / 1000) + _serverOffset
 
-        // Frame elapsed header + frame-clock-display in controls partial
-        // Both read state from the clock-controls div (inside the replaced partial, always fresh)
-        var clockDiv = document.querySelector("[data-frame-started-at]")
-        if (clockDiv) {
-          var startedAt   = parseInt(clockDiv.dataset.frameStartedAt  || "0")
-          var totalPaused = parseInt(clockDiv.dataset.frameTotalPaused || "0")
-          var pausedAt    = parseInt(clockDiv.dataset.framePausedAt    || "0")
-          if (startedAt) {
-            var endpoint = pausedAt ? pausedAt : now
-            var elapsed  = Math.max(0, endpoint - startedAt - totalPaused)
-            var frameElapsed = document.getElementById("frame-elapsed")
-            if (frameElapsed) frameElapsed.textContent = "Frame " + fmtDuration(elapsed)
-            var clockDisplay = document.getElementById("frame-clock-display")
-            if (clockDisplay && !pausedAt) clockDisplay.textContent = fmtDuration(elapsed)
-          }
+        // Clock state comes from whichever fresh div is on the page:
+        //   scoring view  → clock-controls div   (replaced on every action)
+        //   watch view    → scoreboard div        (replaced on every broadcast)
+        var clockDiv  = document.querySelector("[data-frame-started-at]")
+        var startedAt = clockDiv ? parseInt(clockDiv.dataset.frameStartedAt  || "0") : 0
+        var pausedAt  = clockDiv ? parseInt(clockDiv.dataset.framePausedAt   || "0") : 0
+        var totalPaused = clockDiv ? parseInt(clockDiv.dataset.frameTotalPaused || "0") : 0
+        var endpoint  = pausedAt ? pausedAt : now
+
+        // Frame elapsed (scoring view only)
+        if (startedAt) {
+          var elapsed = Math.max(0, endpoint - startedAt - totalPaused)
+          var frameElapsed = document.getElementById("frame-elapsed")
+          if (frameElapsed) frameElapsed.textContent = "Frame " + fmtDuration(elapsed)
+          var clockDisplay = document.getElementById("frame-clock-display")
+          if (clockDisplay && !pausedAt) clockDisplay.textContent = fmtDuration(elapsed)
         }
 
-        // Match elapsed in watch view (element lives inside watch-content, replaced on updates)
+        // Match elapsed (watch view)
         var matchEl = document.getElementById("match-elapsed")
         if (matchEl) {
           var matchStart = parseInt(matchEl.dataset.startedAt || "0")
-          var framePausedAt = parseInt(matchEl.dataset.framePausedAt || "0")
           if (matchStart) {
-            var matchEndpoint = framePausedAt ? framePausedAt : now
-            matchEl.textContent = "Match " + fmtDuration(Math.max(0, matchEndpoint - matchStart))
+            matchEl.textContent = "Match " + fmtDuration(Math.max(0, endpoint - matchStart))
           }
         }
       }

@@ -29,7 +29,6 @@ class MatchChannel < ApplicationCable::Channel
     ActionCable.server.broadcast("match_#{frame.match_id}", {
       type: "frame_update",
       frame_id: frame.id,
-      frame_paused_at: frame.paused_at&.to_i,
       scoreboard_html: scoreboard_html,
       stats_html: stats_html,
       recent_visits_html: recent_visits_html

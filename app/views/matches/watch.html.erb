@@ -10,7 +10,6 @@
         <% match_elapsed = [(Time.current - @match_started_at).to_i, 0].max %>
         <span id="match-elapsed"
               data-started-at="<%= @match_started_at.to_i %>"
-              data-frame-paused-at="<%= @current_frame&.paused_at&.to_i %>"
               class="text-gray-500 text-sm font-mono tabular-nums">Match <%= format_duration(match_elapsed) %></span>
       <% end %>
       <% if @match.in_progress? %>
@@ -107,12 +106,6 @@
                 currentFrameId = data.frame_id
               })
             return
-          }
-
-          // Same frame — update pause state on match-elapsed
-          var matchEl = document.getElementById("match-elapsed")
-          if (matchEl && data.frame_paused_at !== undefined) {
-            matchEl.dataset.framePausedAt = data.frame_paused_at || ""
           }
 
           // Same frame — swap scoreboard, stats, and recent visits in-place

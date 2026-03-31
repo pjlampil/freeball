@@ -13,7 +13,11 @@
 <% comeback = frame.comeback_possible? %>
 <% snookers = comeback ? 0 : frame.snookers_needed %>
 
-<div id="scoreboard-<%= frame.id %>" class="space-y-4">
+<div id="scoreboard-<%= frame.id %>"
+     data-frame-started-at="<%= frame.started_at&.to_i %>"
+     data-frame-paused-at="<%= frame.paused_at&.to_i %>"
+     data-frame-total-paused="<%= frame.total_paused_seconds %>"
+     class="space-y-4">
 
   <%# Score card %>
   <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">

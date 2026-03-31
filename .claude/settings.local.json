@@ -20,7 +20,10 @@
       "Bash(bin/rails db:migrate 2>&1)",
       "Bash(bin/rails runner:*)",
       "Bash(bin/rails routes:*)",
-      "Bash(find /Users/pekkalampila/code/freeball/app/controllers -name *admin* -o -name *user*)"
+      "Bash(find /Users/pekkalampila/code/freeball/app/controllers -name *admin* -o -name *user*)",
+      "Bash(find /Users/pekkalampila/code/freeball -name cable_schema.rb -o -name *solid_cable*)",
+      "Bash(bundle exec:*)",
+      "Read(//usr/local/**)"
     ]
   }
 }
