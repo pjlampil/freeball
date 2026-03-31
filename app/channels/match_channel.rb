@@ -7,8 +7,12 @@ class MatchChannel < ApplicationCable::Channel
   end
 
   def self.broadcast_frame_update(frame)
+    frame = Frame.includes(match: [ :player1, :player2 ]).find(frame.id)
     match = frame.match
     visits = match.frames.includes(visits: [ :shots, :player ]).flat_map(&:visits)
+
+    player1 = match.player1
+    player2 = match.player2
 
     scoreboard_html = ApplicationController.render(
       partial: "frames/scoreboard",
@@ -17,8 +21,8 @@ class MatchChannel < ApplicationCable::Channel
     stats_html = ApplicationController.render(
       partial: "shared/stats_table",
       locals: {
-        p1_stats: Stats.new(match.player1, visits),
-        p2_stats: Stats.new(match.player2, visits)
+        p1_stats: Stats.new(player1, visits),
+        p2_stats: Stats.new(player2, visits)
       }
     )
     recent_visits_html = ApplicationController.render(
