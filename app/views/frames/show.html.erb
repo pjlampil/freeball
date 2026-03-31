@@ -50,23 +50,18 @@
       received(data) {
         if (suppressWsUpdate) return
         const frameEl = document.getElementById(`frame-${data.frame_id}`)
-        if (frameEl) {
-          // We're on the frame page — re-fetch to get correct button states for this user
-          fetch(window.location.href, { headers: { "Accept": "text/html" }, redirect: "follow" })
-            .then(r => r.text())
-            .then(html => {
-              const doc = new DOMParser().parseFromString(html, "text/html")
-              const fresh = doc.getElementById(`frame-${data.frame_id}`)
-              if (fresh) frameEl.outerHTML = fresh.outerHTML
-              const freshStats = doc.getElementById("frame-live-stats")
-              const statsEl = document.getElementById("frame-live-stats")
-              if (freshStats && statsEl) statsEl.outerHTML = freshStats.outerHTML
-            })
-        } else {
-          // On another page (e.g. match overview) — swap just the scoreboard
-          const scoreboardEl = document.getElementById(`scoreboard-${data.frame_id}`)
-          if (scoreboardEl && data.scoreboard_html) scoreboardEl.outerHTML = data.scoreboard_html
-        }
+        if (!frameEl) return
+        // Re-fetch to get correct button states for this user
+        fetch(window.location.href, { headers: { "Accept": "text/html" }, redirect: "follow" })
+          .then(r => r.text())
+          .then(html => {
+            const doc = new DOMParser().parseFromString(html, "text/html")
+            const fresh = doc.getElementById(`frame-${data.frame_id}`)
+            if (fresh) frameEl.outerHTML = fresh.outerHTML
+            const freshStats = doc.getElementById("frame-live-stats")
+            const statsEl = document.getElementById("frame-live-stats")
+            if (freshStats && statsEl) statsEl.outerHTML = freshStats.outerHTML
+          })
       }
     }
   )

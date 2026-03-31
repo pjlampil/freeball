@@ -94,33 +94,15 @@
       { channel: "MatchChannel", match_id: <%= @match.id %> },
       {
         received(data) {
-          // If the frame changed, re-fetch the whole watch page
-          if (data.frame_id && data.frame_id !== currentFrameId) {
-            fetch(window.location.href, { headers: { "Accept": "text/html" } })
-              .then(r => r.text())
-              .then(html => {
-                const doc = new DOMParser().parseFromString(html, "text/html")
-                const fresh = doc.getElementById("watch-content")
-                const el = document.getElementById("watch-content")
-                if (fresh && el) el.innerHTML = fresh.innerHTML
-                currentFrameId = data.frame_id
-              })
-            return
-          }
-
-          // Same frame — swap scoreboard, stats, and recent visits in-place
-          if (data.scoreboard_html) {
-            const el = document.getElementById(`scoreboard-${data.frame_id}`)
-            if (el) el.outerHTML = data.scoreboard_html
-          }
-          if (data.stats_html) {
-            const el = document.getElementById("watch-stats")
-            if (el) el.innerHTML = data.stats_html
-          }
-          if (data.recent_visits_html !== undefined) {
-            const el = document.getElementById("watch-recent-visits")
-            if (el) el.innerHTML = data.recent_visits_html
-          }
+          fetch(window.location.href, { headers: { "Accept": "text/html" } })
+            .then(r => r.text())
+            .then(html => {
+              const doc = new DOMParser().parseFromString(html, "text/html")
+              const fresh = doc.getElementById("watch-content")
+              const el = document.getElementById("watch-content")
+              if (fresh && el) el.innerHTML = fresh.innerHTML
+              if (data.frame_id) currentFrameId = data.frame_id
+            })
         }
       }
     )

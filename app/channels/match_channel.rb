@@ -7,31 +7,8 @@ class MatchChannel < ApplicationCable::Channel
   end
 
   def self.broadcast_frame_update(frame)
-    match = frame.match
-    visits = match.frames.includes(visits: [ :shots, :player ]).flat_map(&:visits)
-
-    scoreboard_html = ApplicationController.render(
-      partial: "frames/scoreboard",
-      locals: { frame: frame }
-    )
-    stats_html = ApplicationController.render(
-      partial: "shared/stats_table",
-      locals: {
-        p1_stats: Stats.new(match.player1, visits),
-        p2_stats: Stats.new(match.player2, visits)
-      }
-    )
-    recent_visits_html = ApplicationController.render(
-      partial: "frames/recent_visits",
-      locals: { frame: frame }
-    )
-
     ActionCable.server.broadcast("match_#{frame.match_id}", {
-      type: "frame_update",
-      frame_id: frame.id,
-      scoreboard_html: scoreboard_html,
-      stats_html: stats_html,
-      recent_visits_html: recent_visits_html
+      frame_id: frame.id
     })
   end
 end
