@@ -89,10 +89,12 @@
   <script type="module">
     const { default: consumer } = await import("channels/consumer")
     let currentFrameId = <%= @current_frame&.id || "null" %>
-
+    setWsStatus("connecting")
     consumer.subscriptions.create(
       { channel: "MatchChannel", match_id: <%= @match.id %> },
       {
+        connected()    { setWsStatus("connected") },
+        disconnected() { setWsStatus("error") },
         received(data) {
           fetch(window.location.href, { headers: { "Accept": "text/html" } })
             .then(r => r.text())

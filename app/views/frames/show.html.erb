@@ -44,9 +44,12 @@
 
   // Live scoreboard updates for spectators
   const { default: consumer } = await import("channels/consumer")
+  setWsStatus("connecting")
   consumer.subscriptions.create(
     { channel: "MatchChannel", match_id: <%= @match.id %> },
     {
+      connected()    { setWsStatus("connected") },
+      disconnected() { setWsStatus("error") },
       received(data) {
         if (suppressWsUpdate) return
         const frameEl = document.getElementById(`frame-${data.frame_id}`)

@@ -72,19 +72,20 @@ class FramesController < ApplicationController
     if current_visit&.active? && current_visit.shots.empty? && current_visit.visit_number > 1
       prev_visit = @frame.visits.find_by(visit_number: current_visit.visit_number - 1)
       if prev_visit&.ended_by_miss? || prev_visit&.ended_by_conceded?
+        undo_message = "#{prev_visit.player.name}: undid #{prev_visit.ended_by_miss? ? "end of visit (miss)" : "conceded visit"}"
         current_visit.destroy!
         prev_visit.update!(ended_by: nil)
         MatchChannel.broadcast_frame_update(@frame)
         respond_to do |format|
-          format.json { render json: { ok: true } }
-          format.any  { render partial: "frames/frame", locals: { frame: @frame.reload } }
+          format.json { render json: { ok: true, message: undo_message } }
+          format.any  { render partial: "frames/frame", locals: { frame: @frame.reload, undo_message: undo_message } }
         end
         return
       end
     end
 
     # Otherwise undo the last shot (and reverse its side-effects)
-    last_shot = @frame.shots.joins(:visit).order("visits.visit_number ASC, shots.sequence ASC").last
+    last_shot = @frame.shots.joins(:visit).reorder("visits.visit_number DESC, shots.sequence DESC").first
     unless last_shot
       respond_to do |format|
         format.any { render partial: "frames/frame", locals: { frame: @frame.reload } }
@@ -94,6 +95,11 @@ class FramesController < ApplicationController
 
     shot_visit          = last_shot.visit
     was_foul            = last_shot.foul?
+    undo_message        = if was_foul
+      "#{shot_visit.player.name}: undid foul (+#{last_shot.foul_value})"
+    else
+      "#{shot_visit.player.name}: undid #{last_shot.ball.humanize} (+#{last_shot.points})"
+    end
     frame_was_completed = @frame.completed?
     frame_had_pending   = @frame.pending_winner_id.present?
     frame_had_respot    = @frame.respotted_black?
@@ -137,8 +143,8 @@ class FramesController < ApplicationController
 
     MatchChannel.broadcast_frame_update(@frame)
     respond_to do |format|
-      format.json { render json: { ok: true } }
-      format.any  { render partial: "frames/frame", locals: { frame: @frame.reload } }
+      format.json { render json: { ok: true, message: undo_message } }
+      format.any  { render partial: "frames/frame", locals: { frame: @frame.reload, undo_message: undo_message } }
     end
   end
 

@@ -7,8 +7,15 @@
 <% current_player = frame.current_player %>
 <% valid = frame.valid_balls %>
 <% paused = frame.clock_paused? %>
+<% undo_message = local_assigns[:undo_message] %>
 
 <div id="frame-<%= frame.id %>" class="space-y-4">
+
+  <% if undo_message %>
+    <div class="bg-gray-800 border border-gray-700 text-gray-300 text-sm px-4 py-2.5 rounded-xl flex items-center gap-2">
+      <span class="text-gray-500">↩</span> <%= undo_message %>
+    </div>
+  <% end %>
 
   <%# Scoreboard (also the broadcast target — see _scoreboard.html.erb) %>
   <%= render "frames/scoreboard", frame: frame %>
@@ -32,7 +39,7 @@
           class: "w-full bg-green-700 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors active:scale-95" %>
       <%= button_to "↩ Undo last shot", undo_frame_path(frame),
           method: :post,
-          class: "w-full py-2 bg-transparent border border-gray-800 hover:border-gray-700 text-gray-600 hover:text-gray-400 text-xs font-medium rounded-xl transition-colors active:scale-95" %>
+          class: "w-full py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white text-sm font-medium rounded-xl transition-colors active:scale-95" %>
       <% end %>
     </div>
 
@@ -62,7 +69,7 @@
           </div>
           <%= button_to "End visit", end_visit_frame_path(frame),
               method: :post, params: { ended_by: :miss },
-              class: "px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-gray-300 text-xs font-medium rounded-lg transition-colors active:scale-95 shrink-0" %>
+              class: "px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-200 hover:text-white text-sm font-medium rounded-lg transition-colors active:scale-95 shrink-0" %>
         </div>
 
         <%# ── Ball buttons ───────────────────────────────────────── %>
@@ -104,9 +111,9 @@
                   method: :post,
                   params: { shot: { ball: :red, result: :foul, foul_value: val } },
                   form_class: "flex-1",
-                  class: "w-full flex items-center justify-center gap-1.5 py-2.5 bg-orange-950/40 hover:bg-orange-900/60 border border-orange-900/60 hover:border-orange-700 rounded-xl transition-colors active:scale-95" do %>
-                <span class="text-orange-400 font-bold text-base leading-none"><%= val %></span>
-                <span class="text-orange-700 text-xs">pts</span>
+                  class: "w-full flex items-center justify-center gap-1.5 py-3 bg-orange-950/70 hover:bg-orange-900/80 border border-orange-800/80 hover:border-orange-700 rounded-xl transition-colors active:scale-95" do %>
+                <span class="text-orange-300 font-bold text-xl leading-none"><%= val %></span>
+                <span class="text-orange-500 text-sm">pts</span>
               <% end %>
             <% end %>
           </div>
@@ -131,33 +138,33 @@
           <%= button_to "#{player1.name} wins", complete_frame_path(frame),
               method: :post, params: { winner_id: player1.id },
               form_class: "flex-1",
-              class: "w-full bg-gray-800 hover:bg-green-950 border border-gray-700 hover:border-green-800 text-green-400 font-semibold py-3 rounded-xl transition-colors active:scale-95 text-sm" %>
+              class: "w-full bg-gray-800 hover:bg-green-950 border border-gray-600 hover:border-green-700 text-green-300 font-semibold py-4 rounded-xl transition-colors active:scale-95 text-base" %>
           <%= button_to "#{player2.name} wins", complete_frame_path(frame),
               method: :post, params: { winner_id: player2.id },
               form_class: "flex-1",
-              class: "w-full bg-gray-800 hover:bg-green-950 border border-gray-700 hover:border-green-800 text-green-400 font-semibold py-3 rounded-xl transition-colors active:scale-95 text-sm" %>
+              class: "w-full bg-gray-800 hover:bg-green-950 border border-gray-600 hover:border-green-700 text-green-300 font-semibold py-4 rounded-xl transition-colors active:scale-95 text-base" %>
         </div>
         <div class="flex gap-2 mt-1">
           <%= button_to "− Remove red", remove_red_frame_path(frame),
               method: :post,
               disabled: frame.reds_remaining <= 0,
               form_class: "flex-1",
-              class: "w-full py-2 bg-transparent border border-gray-800 hover:border-red-900 text-gray-600 hover:text-red-400 text-xs font-medium rounded-xl transition-colors active:scale-95 #{ frame.reds_remaining <= 0 ? 'opacity-30 pointer-events-none' : '' }" %>
+              class: "w-full py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-red-700 text-white hover:text-red-400 text-sm font-medium rounded-xl transition-colors active:scale-95 #{ frame.reds_remaining <= 0 ? 'opacity-30 pointer-events-none' : '' }" %>
           <% if frame.removed_reds > 0 %>
             <%= button_to "↩ Restore red", restore_red_frame_path(frame),
                 method: :post,
                 form_class: "flex-1",
-                class: "w-full py-2 bg-transparent border border-gray-800 hover:border-gray-700 text-gray-600 hover:text-gray-400 text-xs font-medium rounded-xl transition-colors active:scale-95" %>
+                class: "w-full py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white text-sm font-medium rounded-xl transition-colors active:scale-95" %>
           <% end %>
         </div>
         <%= button_to "↩ Undo last action", undo_frame_path(frame),
             method: :post,
             disabled: !can_undo,
             form_class: "mt-1",
-            class: "w-full py-2 bg-transparent border border-gray-800 hover:border-gray-700 text-gray-600 hover:text-gray-400 text-xs font-medium rounded-xl transition-colors active:scale-95 #{ can_undo ? '' : 'opacity-30 pointer-events-none' }" %>
+            class: "w-full py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white text-sm font-medium rounded-xl transition-colors active:scale-95 #{ can_undo ? '' : 'opacity-30 pointer-events-none' }" %>
         <button type="button" id="wake-lock-toggle"
                 onclick="toggleWakeLock()"
-                class="w-full py-2 bg-transparent border border-gray-800 text-gray-700 text-xs font-medium rounded-xl transition-colors mt-1">
+                class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white text-sm font-medium rounded-xl transition-colors mt-1">
           ☀ Keep screen on: <span id="wake-lock-state">Off</span>
         </button>
       </div>

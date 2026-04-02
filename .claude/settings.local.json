@@ -23,7 +23,8 @@
       "Bash(find /Users/pekkalampila/code/freeball/app/controllers -name *admin* -o -name *user*)",
       "Bash(find /Users/pekkalampila/code/freeball -name cable_schema.rb -o -name *solid_cable*)",
       "Bash(bundle exec:*)",
-      "Read(//usr/local/**)"
+      "Read(//usr/local/**)",
+      "Bash(bin/rails test:*)"
     ]
   }
 }

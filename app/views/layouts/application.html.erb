@@ -57,6 +57,15 @@
       }
 
       setInterval(updateTimers, 1000)
+
+      window.setWsStatus = function(state) {
+        var dot = document.getElementById("ws-dot")
+        if (!dot) return
+        dot.style.display = "inline-block"
+        if (state === "connected")  { dot.style.background = "#22c55e"; dot.style.animation = "" }
+        else if (state === "error") { dot.style.background = "#ef4444"; dot.style.animation = "" }
+        else                        { dot.style.background = "#4b5563"; dot.style.animation = "pulse 2s infinite" }
+      }
     </script>
     <script>
       document.addEventListener("touchmove", function(e) {
@@ -73,9 +82,12 @@
 
   <body class="bg-gray-950 text-white min-h-screen overflow-x-hidden">
     <nav class="bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center justify-between sticky top-0 z-50">
-      <a href="<%= root_path %>" class="text-green-400 font-bold text-xl tracking-tight">
-        🎱 Freeball
-      </a>
+      <div class="flex items-center gap-2">
+        <a href="<%= root_path %>" class="text-green-400 font-bold text-xl tracking-tight">
+          🎱 Freeball
+        </a>
+        <span id="ws-dot" title="Live connection" style="display:none;width:8px;height:8px;border-radius:50%;background:#4b5563"></span>
+      </div>
       <% if user_signed_in? %>
         <div class="flex items-center gap-3">
           <span class="text-gray-400 text-sm hidden sm:block"><%= current_user.name %></span>
@@ -85,6 +97,8 @@
           <%= link_to "New Match", new_match_path, class: "bg-green-600 hover:bg-green-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors" %>
           <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "text-gray-400 hover:text-white text-sm transition-colors" %>
         </div>
+      <% else %>
+        <%= link_to "Sign in", new_user_session_path, class: "text-gray-400 hover:text-white text-sm transition-colors" %>
       <% end %>
     </nav>
 
