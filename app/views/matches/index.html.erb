@@ -30,16 +30,14 @@
         <div class="space-y-3">
           <% matches.each do |match| %>
             <%= link_to match_path(match), class: "block bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-2xl p-4 transition-colors" do %>
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-gray-500 text-xs"><%= match.created_at.strftime("%b %d") %></span>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-gray-500 text-xs flex-1"><%= match.created_at.strftime("%b %d") %></span>
+                <span class="text-xs text-gray-600 flex-1 text-center">
                   <% unless match.standard? %>
-                    <span class="text-xs text-gray-600"><%= match.reds_count %> reds</span>
+                    <%= match.reds_count %> reds<%= " — stop at last red" if match.stop_after_reds? %>
                   <% end %>
-                </div>
-                <% if match.best_of %>
-                  <span class="text-gray-600 text-xs">Best of <%= match.best_of %></span>
-                <% end %>
+                </span>
+                <span class="text-xs text-gray-600 flex-1 text-right"><%= match.best_of ? "Best of #{match.best_of}" : "Open" %></span>
               </div>
 
               <div class="flex items-center justify-between">

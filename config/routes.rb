@@ -28,6 +28,7 @@ Rails.application.routes.draw do
     member do
       get  :stats
       get  :watch
+      get  :stream
       post :start
       post :finish
     end

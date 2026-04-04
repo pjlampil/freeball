@@ -1,5 +1,9 @@
 <% content_for :title, "#{@match.player1.name} vs #{@match.player2.name}" %>
 
+<video id="stream-video" autoplay playsinline
+       style="display:none"
+       class="w-full aspect-video bg-black object-cover rounded-2xl mb-4"></video>
+
 <div id="watch-content" class="space-y-6">
 
   <%# Header %>
@@ -77,9 +81,11 @@
   <% end %>
 
   <% if user_signed_in? && @match.in_progress? && @current_frame %>
-    <div class="pt-2 border-t border-gray-800">
+    <div class="pt-2 border-t border-gray-800 flex gap-2">
       <%= link_to "Score this match →", frame_path(@current_frame),
-          class: "block w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-2xl text-base transition-colors text-center" %>
+          class: "flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-2xl text-base transition-colors text-center" %>
+      <%= link_to "📹 Live stream", stream_match_path(@match),
+          class: "bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white font-bold py-3 px-4 rounded-2xl text-base transition-colors text-center" %>
     </div>
   <% end %>
 
@@ -88,6 +94,54 @@
 <% if @match.in_progress? %>
   <script type="module">
     const { default: consumer } = await import("channels/consumer")
+
+    // ── WebRTC viewer ──────────────────────────────────────────────
+    const viewerId = "v-" + Math.random().toString(36).slice(2)
+    const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }
+    let pc = null
+    let streamerId = null
+
+    const streamSub = consumer.subscriptions.create(
+      { channel: "StreamChannel", match_id: <%= @match.id %> },
+      {
+        connected() {
+          this.perform("signal", { type: "viewer_ready", viewer_id: viewerId })
+        },
+        received(data) {
+          if (data.type === "stream_started") {
+            streamerId = data.streamer_id
+            this.perform("signal", { type: "viewer_ready", viewer_id: viewerId })
+          } else if (data.type === "offer" && data.to === viewerId) {
+            streamerId = data.from
+            connectToStream(data.sdp, this)
+          } else if (data.type === "ice" && data.to === viewerId) {
+            pc?.addIceCandidate(new RTCIceCandidate(data.candidate))
+          } else if (data.type === "stream_ended") {
+            pc?.close(); pc = null; streamerId = null
+            const v = document.getElementById("stream-video")
+            if (v) { v.srcObject = null; v.style.display = "none" }
+          }
+        }
+      }
+    )
+
+    async function connectToStream(sdp, sub) {
+      pc?.close()
+      pc = new RTCPeerConnection(ICE)
+      pc.ontrack = e => {
+        const v = document.getElementById("stream-video")
+        if (v) { v.srcObject = e.streams[0]; v.style.display = "block" }
+      }
+      pc.onicecandidate = e => {
+        if (e.candidate) sub.perform("signal", { type: "ice", to: streamerId, from: viewerId, candidate: e.candidate.toJSON() })
+      }
+      await pc.setRemoteDescription(new RTCSessionDescription(sdp))
+      const answer = await pc.createAnswer()
+      await pc.setLocalDescription(answer)
+      sub.perform("signal", { type: "answer", to: streamerId, from: viewerId, sdp: { type: answer.type, sdp: answer.sdp } })
+    }
+
+    // ── Score updates ──────────────────────────────────────────────
     let currentFrameId = <%= @current_frame&.id || "null" %>
     setWsStatus("connecting")
     consumer.subscriptions.create(

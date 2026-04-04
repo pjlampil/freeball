@@ -1,0 +1,110 @@
+<% content_for :title, "Stream — #{@match.player1.name} vs #{@match.player2.name}" %>
+
+<div class="space-y-4">
+  <div class="flex items-center gap-3">
+    <%= link_to "←", watch_match_path(@match), class: "text-gray-400 hover:text-white text-xl" %>
+    <h1 class="text-lg font-bold">Live stream</h1>
+    <span class="text-gray-500 text-sm"><%= @match.player1.name %> vs <%= @match.player2.name %></span>
+  </div>
+
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+    <video id="preview" autoplay muted playsinline
+           class="w-full aspect-video bg-black object-cover"></video>
+  </div>
+
+  <div id="stream-status" class="text-center text-gray-500 text-sm">Camera off</div>
+
+  <button id="stream-btn" onclick="toggleStream()"
+          class="w-full py-3 bg-red-700 hover:bg-red-600 text-white font-bold rounded-2xl text-base transition-colors active:scale-95">
+    Go live
+  </button>
+
+  <p class="text-xs text-gray-600 text-center">
+    Viewers on the watch page will see your camera feed.
+  </p>
+</div>
+
+<script type="module">
+  const matchId = <%= @match.id %>
+  const streamerId = "s-" + Math.random().toString(36).slice(2)
+  const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }
+
+  let localStream = null
+  let streaming = false
+  const peers = {} // viewerId -> RTCPeerConnection
+
+  if (!window.isSecureContext) {
+    document.getElementById("stream-status").textContent = "⚠️ Needs HTTPS — check the URL"
+    document.getElementById("stream-btn").disabled = true
+    document.getElementById("stream-btn").classList.add("opacity-40", "pointer-events-none")
+  } else if (!navigator.mediaDevices?.getUserMedia) {
+    document.getElementById("stream-status").textContent = "⚠️ Camera not supported in this browser"
+    document.getElementById("stream-btn").disabled = true
+    document.getElementById("stream-btn").classList.add("opacity-40", "pointer-events-none")
+  }
+
+  const { default: consumer } = await import("channels/consumer")
+  const sub = consumer.subscriptions.create(
+    { channel: "StreamChannel", match_id: matchId },
+    {
+      received(data) {
+        if (data.type === "viewer_ready" && streaming) {
+          offerViewer(data.viewer_id)
+        } else if (data.type === "answer" && data.to === streamerId) {
+          peers[data.from]?.setRemoteDescription(new RTCSessionDescription(data.sdp))
+        } else if (data.type === "ice" && data.to === streamerId) {
+          peers[data.from]?.addIceCandidate(new RTCIceCandidate(data.candidate))
+        }
+      }
+    }
+  )
+
+  async function offerViewer(viewerId) {
+    const pc = new RTCPeerConnection(ICE)
+    peers[viewerId] = pc
+    localStream.getTracks().forEach(t => pc.addTrack(t, localStream))
+    pc.onicecandidate = e => {
+      if (e.candidate) sub.perform("signal", { type: "ice", to: viewerId, from: streamerId, candidate: e.candidate.toJSON() })
+    }
+    const offer = await pc.createOffer()
+    await pc.setLocalDescription(offer)
+    sub.perform("signal", { type: "offer", to: viewerId, from: streamerId, sdp: { type: offer.type, sdp: offer.sdp } })
+  }
+
+  window.toggleStream = async function() {
+    if (!window.isSecureContext) {
+      document.getElementById("stream-status").textContent = "Needs HTTPS — check the URL"
+      return
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      document.getElementById("stream-status").textContent = "Camera not supported in this browser"
+      return
+    }
+    if (streaming) {
+      streaming = false
+      localStream.getTracks().forEach(t => t.stop())
+      localStream = null
+      document.getElementById("preview").srcObject = null
+      Object.values(peers).forEach(pc => pc.close())
+      Object.keys(peers).forEach(k => delete peers[k])
+      sub.perform("signal", { type: "stream_ended" })
+      document.getElementById("stream-btn").textContent = "Go live"
+      document.getElementById("stream-btn").classList.replace("bg-gray-700", "bg-red-700")
+      document.getElementById("stream-btn").classList.replace("hover:bg-gray-600", "hover:bg-red-600")
+      document.getElementById("stream-status").textContent = "Camera off"
+    } else {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        document.getElementById("preview").srcObject = localStream
+        streaming = true
+        sub.perform("signal", { type: "stream_started", streamer_id: streamerId })
+        document.getElementById("stream-btn").textContent = "Stop streaming"
+        document.getElementById("stream-btn").classList.replace("bg-red-700", "bg-gray-700")
+        document.getElementById("stream-btn").classList.replace("hover:bg-red-600", "hover:bg-gray-600")
+        document.getElementById("stream-status").textContent = "🔴 Live"
+      } catch(e) {
+        document.getElementById("stream-status").textContent = "Error: " + (e.message || e.name || e)
+      }
+    }
+  }
+</script>

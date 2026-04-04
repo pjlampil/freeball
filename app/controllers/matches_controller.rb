@@ -1,6 +1,6 @@
 class MatchesController < ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show, :stats, :watch ]
-  before_action :set_match, only: [ :show, :edit, :update, :destroy, :start, :finish, :stats, :watch ]
+  before_action :set_match, only: [ :show, :edit, :update, :destroy, :start, :finish, :stats, :watch, :stream ]
   before_action :require_participant!, only: [ :edit, :update, :destroy, :finish ]
 
   def index
@@ -27,6 +27,9 @@ class MatchesController < ApplicationController
       @p1_stats = Stats.new(@match.player1, visits)
       @p2_stats = Stats.new(@match.player2, visits)
     end
+  end
+
+  def stream
   end
 
   def stats

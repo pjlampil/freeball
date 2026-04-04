@@ -67,6 +67,10 @@ Rails.application.configure do
   # Annotate rendered view with file names.
   config.action_view.annotate_rendered_view_with_filenames = true
 
+  # Allow ngrok tunnels for HTTPS development (e.g. camera testing on iPhone)
+  config.hosts << /.*\.ngrok-free\.(app|dev)/
+  config.hosts << /.*\.ngrok\.io/
+
   # Uncomment if you wish to allow Action Cable access from any origin.
   # config.action_cable.disable_request_forgery_protection = true
 

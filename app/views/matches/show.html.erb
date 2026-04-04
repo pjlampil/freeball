@@ -62,14 +62,16 @@
     <%= button_to "Start Match", start_match_path(@match), method: :post,
         class: "w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors" %>
   <% elsif @match.in_progress? && @match.current_frame %>
-    <div class="flex gap-3">
-      <% if user_signed_in? %>
+    <% if user_signed_in? %>
+      <div class="flex gap-3">
         <%= link_to "Score this match →", frame_path(@match.current_frame),
             class: "flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors text-center" %>
-      <% end %>
-      <%= link_to "Watch live →", watch_match_path(@match),
-          class: "flex-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-4 rounded-2xl text-lg transition-colors text-center" %>
-    </div>
+        <%= link_to "📹 Live stream", stream_match_path(@match),
+            class: "flex-1 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white font-bold py-4 rounded-2xl text-lg transition-colors text-center" %>
+      </div>
+    <% end %>
+    <%= link_to "Watch live →", watch_match_path(@match),
+        class: "block w-full bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-4 rounded-2xl text-lg transition-colors text-center" %>
     <% if user_signed_in? && @match.best_of.nil? && @match.frames.completed.any? &&
           (@match.player1 == current_user || @match.player2 == current_user) %>
       <%= button_to "End match", finish_match_path(@match), method: :post,
