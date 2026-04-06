@@ -99,7 +99,7 @@ class Frame < ApplicationRecord
     return false unless visit&.active? && visit.shots.empty?
 
     prev = visits.find_by(visit_number: visit.visit_number - 1)
-    prev&.ended_by_foul?
+    prev&.ended_by_foul? && prev.player != visit.player
   end
 
   # Points remaining on the table (maximum possible)
@@ -188,20 +188,27 @@ class Frame < ApplicationRecord
   private
 
   # In the colours phase (no reds left), find which colour is next in sequence.
-  # After the 15th red, one nominated colour is potted and re-spotted — that doesn't
-  # count as a colours-phase pot. Colours phase begins at ordered_pots[last_red_index + 2].
+  # After the last red, one nominated colour is potted and re-spotted — that doesn't
+  # count as a colours-phase pot. But only skip it if it was actually potted in the
+  # same visit as the last red; if the player missed it the next pot is already phase 1.
   def next_color_in_sequence
     colors_in_order = %w[yellow green brown blue pink black]
 
     ordered_pots = visits.joins(:shots)
                          .where(shots: { result: "potted" })
                          .order("visits.visit_number ASC, shots.sequence ASC")
-                         .pluck("shots.ball")
+                         .pluck("visits.visit_number", "shots.ball")
 
-    last_red_pos = ordered_pots.rindex("red")
+    last_red_pos = ordered_pots.rindex { |_, ball| ball == "red" }
     return :yellow unless last_red_pos
 
-    phase_pots = (ordered_pots[(last_red_pos + 2)..] || []).reject { |b| b == "red" }
+    last_red_visit = ordered_pots[last_red_pos][0]
+    next_el        = ordered_pots[last_red_pos + 1]
+
+    # Nominated colour counts as a skip only when potted in the same visit as the last red
+    phase_start = (next_el && next_el[0] == last_red_visit) ? last_red_pos + 2 : last_red_pos + 1
+
+    phase_pots = (ordered_pots[phase_start..] || []).reject { |_, ball| ball == "red" }
     colors_in_order[phase_pots.length]&.to_sym
   end
 
@@ -212,10 +219,18 @@ class Frame < ApplicationRecord
     ordered_pots = visits.joins(:shots)
                          .where(shots: { result: "potted" })
                          .order("visits.visit_number ASC, shots.sequence ASC")
-                         .pluck("shots.ball")
+                         .pluck("visits.visit_number", "shots.ball")
 
-    last_red_pos = ordered_pots.rindex("red")
-    phase_pots = last_red_pos ? (ordered_pots[(last_red_pos + 2)..] || []).reject { |b| b == "red" } : []
+    last_red_pos = ordered_pots.rindex { |_, ball| ball == "red" }
+
+    phase_pots = if last_red_pos
+      last_red_visit = ordered_pots[last_red_pos][0]
+      next_el        = ordered_pots[last_red_pos + 1]
+      phase_start    = (next_el && next_el[0] == last_red_visit) ? last_red_pos + 2 : last_red_pos + 1
+      (ordered_pots[phase_start..] || []).reject { |_, ball| ball == "red" }
+    else
+      []
+    end
 
     (colors_in_order[phase_pots.length..] || []).sum { |c| values[c] }
   end
