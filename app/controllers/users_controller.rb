@@ -4,7 +4,7 @@ class UsersController < ApplicationController
 
   def stats
     @user = User.find(params[:id])
-    redirect_to root_path, alert: "Not authorized." and return unless @user == current_user || current_user&.superuser?
+    redirect_to root_path, alert: "Not authorized." and return unless @user == current_user
 
     completed_matches = @user.matches
                              .where(status: :completed, scoring_mode: :granular)

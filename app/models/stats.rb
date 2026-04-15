@@ -30,6 +30,10 @@ class Stats
   def highest_break          = @break_scores.max || 0
   def number_of_breaks       = @break_scores.count
   def multi_pot_breaks       = @player_visits.count { |v| v.shots.count(&:potted?) > 1 }
+  def avg_multi_pot_break    = begin
+    scores = @player_visits.select { |v| v.shots.count(&:potted?) > 1 }.map(&:break_score)
+    scores.empty? ? nil : (scores.sum.to_f / scores.size).round(1)
+  end
   def average_break          = @break_scores.empty? ? nil : (@break_scores.sum.to_f / @break_scores.size).round(1)
   def breaks_over(threshold) = @break_scores.count { |s| s >= threshold }
   def breaks_10_plus         = breaks_over(10)
