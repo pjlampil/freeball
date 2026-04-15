@@ -3,7 +3,11 @@ Rails.application.routes.draw do
     controllers: { sessions: "users/sessions" },
     skip: [ :registrations ]
 
-  resources :users, only: [ :index, :new, :create ]
+  resources :users, only: [ :index, :new, :create ] do
+    member do
+      get :stats
+    end
+  end
 
   # Web UI
   root "matches#index"

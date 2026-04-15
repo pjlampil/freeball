@@ -90,7 +90,7 @@
       </div>
       <% if user_signed_in? %>
         <div class="flex items-center gap-3">
-          <span class="text-gray-400 text-sm hidden sm:block"><%= current_user.name %></span>
+          <%= link_to current_user.name, stats_user_path(current_user), class: "text-gray-400 hover:text-white text-sm hidden sm:block transition-colors" %>
           <% if current_user.superuser? %>
             <%= link_to "Users", users_path, class: "text-gray-400 hover:text-white text-sm transition-colors hidden sm:block" %>
           <% end %>
