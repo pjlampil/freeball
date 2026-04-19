@@ -11,9 +11,11 @@
     <% if user_signed_in? && (@match.player1 == current_user || @match.player2 == current_user) %>
       <div class="ml-auto flex items-center gap-2">
         <%= link_to "Edit", edit_match_path(@match), class: "text-xs text-gray-500 hover:text-gray-300 transition-colors" %>
-        <%= button_to "Delete", match_path(@match), method: :delete,
-            form: { data: { turbo_confirm: "Delete this match and all its data? This cannot be undone." } },
-            class: "text-xs text-red-700 hover:text-red-400 transition-colors bg-transparent border-0 cursor-pointer p-0" %>
+        <% unless @match.completed? %>
+          <%= button_to "Delete", match_path(@match), method: :delete,
+              form: { data: { turbo_confirm: "Delete this match and all its data? This cannot be undone." } },
+              class: "text-xs text-red-700 hover:text-red-400 transition-colors bg-transparent border-0 cursor-pointer p-0" %>
+        <% end %>
       </div>
     <% end %>
   </div>
