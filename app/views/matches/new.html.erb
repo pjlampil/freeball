@@ -109,6 +109,51 @@
       </div>
     <% end %>
 
+    <% if @venues.any? %>
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+        <h2 class="font-semibold text-gray-300 text-sm uppercase tracking-wider">Venue</h2>
+        <div>
+          <%= f.label :venue_id, "Venue", class: "block text-sm text-gray-400 mb-1" %>
+          <%= f.select :venue_id,
+              @venues.map { |v| [ v.name, v.id ] },
+              { include_blank: "No venue selected" },
+              class: "w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 appearance-none",
+              id: "venue_select" %>
+        </div>
+        <div id="table_select_wrapper">
+          <%= f.label :snooker_table_id, "Table", class: "block text-sm text-gray-400 mb-1" %>
+          <%= f.select :snooker_table_id,
+              [],
+              { include_blank: "No table selected" },
+              class: "w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 appearance-none",
+              id: "table_select" %>
+        </div>
+      </div>
+      <script>
+        const venueData = <%= raw @venues.each_with_object({}) { |v, h|
+          h[v.id] = v.snooker_tables.order(:number, :name).map { |t| [t.display_name, t.id] }
+        }.to_json %>
+
+        const venueSelect = document.getElementById("venue_select")
+        const tableSelect = document.getElementById("table_select")
+        const tableWrapper = document.getElementById("table_select_wrapper")
+
+        function updateTables() {
+          const tables = venueData[parseInt(venueSelect.value)] || []
+          tableSelect.innerHTML = '<option value="">No table selected</option>'
+          tables.forEach(([name, id]) => {
+            const opt = document.createElement("option")
+            opt.value = id; opt.textContent = name
+            tableSelect.appendChild(opt)
+          })
+          tableWrapper.style.display = tables.length > 0 ? "block" : "none"
+        }
+
+        venueSelect.addEventListener("change", updateTables)
+        updateTables()
+      </script>
+    <% end %>
+
     <%= f.submit "Create Match", class: "w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors cursor-pointer" %>
   <% end %>
 </div>

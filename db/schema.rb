@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_30_221057) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_19_205049) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -44,11 +44,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_30_221057) do
     t.bigint "player1_id", null: false
     t.bigint "player2_id", null: false
     t.integer "scoring_mode", default: 0, null: false
+    t.bigint "snooker_table_id"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.bigint "venue_id"
     t.integer "visit_mode", default: 0, null: false
     t.index ["player1_id"], name: "index_matches_on_player1_id"
     t.index ["player2_id"], name: "index_matches_on_player2_id"
+    t.index ["snooker_table_id"], name: "index_matches_on_snooker_table_id"
+    t.index ["venue_id"], name: "index_matches_on_venue_id"
   end
 
   create_table "shots", force: :cascade do |t|
@@ -61,6 +65,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_30_221057) do
     t.datetime "updated_at", null: false
     t.bigint "visit_id", null: false
     t.index ["visit_id"], name: "index_shots_on_visit_id"
+  end
+
+  create_table "snooker_tables", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name"
+    t.integer "number"
+    t.datetime "updated_at", null: false
+    t.bigint "venue_id", null: false
+    t.index ["venue_id"], name: "index_snooker_tables_on_venue_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -79,6 +92,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_30_221057) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  create_table "venues", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "visits", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "ended_by"
@@ -94,9 +113,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_30_221057) do
   add_foreign_key "frames", "users", column: "first_to_break_id"
   add_foreign_key "frames", "users", column: "pending_winner_id"
   add_foreign_key "frames", "users", column: "winner_id"
+  add_foreign_key "matches", "snooker_tables"
   add_foreign_key "matches", "users", column: "player1_id"
   add_foreign_key "matches", "users", column: "player2_id"
+  add_foreign_key "matches", "venues"
   add_foreign_key "shots", "visits"
+  add_foreign_key "snooker_tables", "venues"
   add_foreign_key "visits", "frames"
   add_foreign_key "visits", "users", column: "player_id"
 end

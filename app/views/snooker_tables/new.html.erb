@@ -1,0 +1,35 @@
+<% content_for :title, "Add Table — #{@venue.name}" %>
+<div class="space-y-5">
+  <div class="flex items-center gap-3">
+    <%= link_to "←", venues_path, class: "text-gray-400 hover:text-white text-xl" %>
+    <div>
+      <h1 class="text-xl font-bold">Add Table</h1>
+      <p class="text-xs text-gray-500"><%= @venue.name %></p>
+    </div>
+  </div>
+
+  <%= form_with model: [ @venue, @snooker_table ], class: "space-y-5" do |f| %>
+    <% if @snooker_table.errors.any? %>
+      <div class="bg-red-900/50 border border-red-700 rounded-xl p-4">
+        <ul class="text-red-300 text-sm space-y-1">
+          <% @snooker_table.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="flex gap-3">
+      <div class="w-28">
+        <%= f.label :number, "Number", class: "block text-sm text-gray-400 mb-1" %>
+        <%= f.number_field :number, min: 1, class: "w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-green-500" %>
+      </div>
+      <div class="flex-1">
+        <%= f.label :name, "Name (optional)", class: "block text-sm text-gray-400 mb-1" %>
+        <%= f.text_field :name, placeholder: "e.g. Championship table", class: "w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-green-500" %>
+      </div>
+    </div>
+
+    <%= f.submit "Add Table", class: "w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-2xl transition-colors cursor-pointer" %>
+  <% end %>
+</div>

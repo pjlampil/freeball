@@ -5,9 +5,9 @@ class MatchesController < ApplicationController
 
   def index
     @matches = if user_signed_in?
-      current_user.matches.includes(:player1, :player2, :frames).order(created_at: :desc)
+      current_user.matches.includes(:player1, :player2, :frames, :venue, :snooker_table).order(created_at: :desc)
     else
-      Match.includes(:player1, :player2, :frames).order(created_at: :desc)
+      Match.includes(:player1, :player2, :frames, :venue, :snooker_table).order(created_at: :desc)
     end
   end
 
@@ -41,6 +41,7 @@ class MatchesController < ApplicationController
   def new
     @match = Match.new
     @users = User.order(:name)
+    @venues = Venue.includes(:snooker_tables).order(:name)
   end
 
   def create
@@ -55,10 +56,17 @@ class MatchesController < ApplicationController
 
   def edit
     @users = User.order(:name)
+    @venues = Venue.includes(:snooker_tables).order(:name)
   end
 
   def update
-    permitted = @match.frames.any? ? match_params.except(:player1_id, :player2_id, :scoring_mode, :visit_mode, :match_format) : match_params
+    permitted = if @match.completed?
+      match_params.slice(:venue_id, :snooker_table_id)
+    elsif @match.frames.any?
+      match_params.except(:player1_id, :player2_id, :scoring_mode, :visit_mode, :match_format)
+    else
+      match_params
+    end
     if @match.update(permitted)
       redirect_to @match, notice: "Match updated."
     else
@@ -117,6 +125,6 @@ class MatchesController < ApplicationController
   end
 
   def match_params
-    params.require(:match).permit(:player1_id, :player2_id, :best_of, :scoring_mode, :visit_mode, :match_format)
+    params.require(:match).permit(:player1_id, :player2_id, :best_of, :scoring_mode, :visit_mode, :match_format, :venue_id, :snooker_table_id)
   end
 end

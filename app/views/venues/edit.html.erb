@@ -1,0 +1,8 @@
+<% content_for :title, "Edit Venue" %>
+<div class="space-y-5">
+  <div class="flex items-center gap-3">
+    <%= link_to "←", venues_path, class: "text-gray-400 hover:text-white text-xl" %>
+    <h1 class="text-2xl font-bold">Edit Venue</h1>
+  </div>
+  <%= render "form", venue: @venue %>
+</div>

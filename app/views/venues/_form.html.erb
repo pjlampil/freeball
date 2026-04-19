@@ -1,0 +1,18 @@
+<%= form_with model: venue, class: "space-y-5" do |f| %>
+  <% if venue.errors.any? %>
+    <div class="bg-red-900/50 border border-red-700 rounded-xl p-4">
+      <ul class="text-red-300 text-sm space-y-1">
+        <% venue.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :name, "Venue name", class: "block text-sm text-gray-400 mb-1" %>
+    <%= f.text_field :name, class: "w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-green-500", autofocus: true %>
+  </div>
+
+  <%= f.submit class: "w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-2xl transition-colors cursor-pointer" %>
+<% end %>

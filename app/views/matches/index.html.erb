@@ -33,11 +33,17 @@
               <div class="flex items-center justify-between mb-3">
                 <span class="text-gray-500 text-xs flex-1"><%= match.created_at.strftime("%b %d") %></span>
                 <span class="text-xs text-gray-600 flex-1 text-center">
-                  <% unless match.standard? %>
-                    <%= match.reds_count %> reds<%= " — stop at last red" if match.stop_after_reds? %>
+                  <% if match.venue %>
+                    <%= match.venue.name %><%= " · #{match.snooker_table.display_name}" if match.snooker_table && match.venue.snooker_tables.size > 1 %>
                   <% end %>
                 </span>
-                <span class="text-xs text-gray-600 flex-1 text-right"><%= match.best_of ? "Best of #{match.best_of}" : "Open" %></span>
+                <span class="text-xs text-gray-600 flex-1 text-right">
+                  <% parts = [] %>
+                  <% parts << "Best of #{match.best_of}" if match.best_of %>
+                  <% parts << "#{match.reds_count} reds" unless match.standard? %>
+                  <% parts << "stop at last" if match.stop_after_reds? %>
+                  <%= parts.any? ? parts.join(" · ") : "Open" %>
+                </span>
               </div>
 
               <div class="flex items-center justify-between">

@@ -59,6 +59,12 @@
     <% end %>
   </div>
 
+  <% if @match.venue %>
+    <p class="text-sm text-gray-500">
+      📍 <%= @match.venue.name %><%= " · #{@match.snooker_table.display_name}" if @match.snooker_table && @match.venue.snooker_tables.size > 1 %>
+    </p>
+  <% end %>
+
   <%# Action buttons %>
   <% if @match.upcoming? && user_signed_in? %>
     <%= button_to "Start Match", start_match_path(@match), method: :post,

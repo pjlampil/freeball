@@ -2,6 +2,8 @@ class Match < ApplicationRecord
   belongs_to :player1, class_name: "User"
   belongs_to :player2, class_name: "User"
   belongs_to :current_frame, class_name: "Frame", optional: true
+  belongs_to :venue, optional: true
+  belongs_to :snooker_table, optional: true
 
   has_many :frames, dependent: :destroy
 

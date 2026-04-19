@@ -93,6 +93,7 @@
           <%= link_to current_user.name, stats_user_path(current_user), class: "text-gray-400 hover:text-white text-sm hidden sm:block transition-colors" %>
           <% if current_user.superuser? %>
             <%= link_to "Users", users_path, class: "text-gray-400 hover:text-white text-sm transition-colors hidden sm:block" %>
+            <%= link_to "Venues", venues_path, class: "text-gray-400 hover:text-white text-sm transition-colors hidden sm:block" %>
           <% end %>
           <%= link_to "New Match", new_match_path, class: "bg-green-600 hover:bg-green-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors" %>
           <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "text-gray-400 hover:text-white text-sm transition-colors" %>

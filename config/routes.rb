@@ -3,6 +3,10 @@ Rails.application.routes.draw do
     controllers: { sessions: "users/sessions" },
     skip: [ :registrations ]
 
+  resources :venues, only: [ :index, :new, :create, :edit, :update, :destroy ] do
+    resources :snooker_tables, only: [ :new, :create, :destroy ]
+  end
+
   resources :users, only: [ :index, :new, :create ] do
     member do
       get :stats
