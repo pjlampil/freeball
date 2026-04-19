@@ -73,6 +73,5 @@ RUN chmod +x /rails/bin/start-server
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
-# Start server via Thruster by default, this can be overwritten at runtime
-EXPOSE 80
-CMD ["/rails/bin/start-server"]
+EXPOSE 3000
+CMD ["/bin/sh", "-c", "bin/rails server -b 0.0.0.0 -p ${PORT:-3000}"]
