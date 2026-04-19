@@ -61,7 +61,7 @@ class MatchesController < ApplicationController
 
   def update
     permitted = if @match.completed?
-      match_params.slice(:venue_id, :snooker_table_id)
+      params.require(:match).permit(:venue_id, :snooker_table_id)
     elsif @match.frames.any?
       match_params.except(:player1_id, :player2_id, :scoring_mode, :visit_mode, :match_format)
     else
@@ -71,6 +71,7 @@ class MatchesController < ApplicationController
       redirect_to @match, notice: "Match updated."
     else
       @users = User.order(:name)
+      @venues = Venue.includes(:snooker_tables).order(:name)
       render :edit, status: :unprocessable_entity
     end
   end

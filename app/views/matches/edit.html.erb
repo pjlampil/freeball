@@ -160,7 +160,7 @@
         const currentTableId = <%= @match.snooker_table_id || "null" %>
 
         function updateTables() {
-          const tables = venueData[parseInt(venueSelect.value)] || []
+          const tables = venueData[venueSelect.value] || []
           tableSelect.innerHTML = '<option value="">No table selected</option>'
           tables.forEach(([name, id]) => {
             const opt = document.createElement("option")
