@@ -1,114 +1,274 @@
-<% content_for :title, "#{@user.name} — Lifetime Stats" %>
+<% content_for :title, "#{@user.name} — Stats" %>
 
-<div class="space-y-6">
+<div class="space-y-5">
   <div class="flex items-center gap-3">
     <%= link_to "←", root_path, class: "text-gray-400 hover:text-white text-xl" %>
     <div>
       <h1 class="text-lg font-bold"><%= @user.name %></h1>
-      <p class="text-xs text-gray-500">Lifetime stats — granular matches only</p>
+      <p class="text-xs text-gray-500">Granular matches only</p>
     </div>
   </div>
 
-  <%# Match & frame record %>
-  <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-    <div class="border-b border-gray-800 px-4 py-2.5">
-      <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Record</h2>
-    </div>
-    <table class="w-full border-collapse table-fixed">
-      <colgroup>
-        <col style="width:42%">
-        <col style="width:16%">
-        <col style="width:42%">
-      </colgroup>
-      <thead>
-        <tr class="border-b border-gray-800">
-          <th class="text-left text-sm font-bold text-green-400 px-4 py-3">Won</th>
-          <th class="text-center text-xs text-gray-600 uppercase tracking-wider px-1 py-3"></th>
-          <th class="text-right text-sm font-bold text-gray-400 px-4 py-3">Lost</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="text-left text-sm font-semibold tabular-nums px-4 py-2.5 <%= @matches_won > @matches_lost ? 'text-green-400' : 'text-gray-300' %>"><%= @matches_won %></td>
-          <td class="text-center text-xs text-gray-600 px-1 py-2.5">Matches</td>
-          <td class="text-right text-sm font-semibold tabular-nums px-4 py-2.5 <%= @matches_lost > @matches_won ? 'text-green-400' : 'text-gray-300' %>"><%= @matches_lost %></td>
-        </tr>
-        <tr class="bg-gray-900/60">
-          <td class="text-left text-sm font-semibold tabular-nums px-4 py-2.5 <%= @frames_won > @frames_lost ? 'text-green-400' : 'text-gray-300' %>"><%= @frames_won %></td>
-          <td class="text-center text-xs text-gray-600 px-1 py-2.5">Frames</td>
-          <td class="text-right text-sm font-semibold tabular-nums px-4 py-2.5 <%= @frames_lost > @frames_won ? 'text-green-400' : 'text-gray-300' %>"><%= @frames_lost %></td>
-        </tr>
-      </tbody>
-    </table>
+  <%# Tabs %>
+  <% tab = params[:tab] == "trends" ? "trends" : "lifetime" %>
+  <div class="flex gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1">
+    <%= link_to "Lifetime", stats_user_path(@user, tab: "lifetime"),
+        class: "flex-1 text-center text-sm font-medium py-1.5 rounded-lg transition-colors #{tab == "lifetime" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-gray-300"}" %>
+    <%= link_to "Trends", stats_user_path(@user, tab: "trends"),
+        class: "flex-1 text-center text-sm font-medium py-1.5 rounded-lg transition-colors #{tab == "trends" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-gray-300"}" %>
   </div>
 
-  <%# For vs Against stats %>
-  <% stat_row = ->(label, v1, v2, higher_is_better: true, fmt: nil) do
-       v1_str = v1.nil? ? "—" : "#{v1}#{fmt}"
-       v2_str = v2.nil? ? "—" : "#{v2}#{fmt}"
-       v1_win = !v1.nil? && !v2.nil? && v1 != v2 && (higher_is_better ? v1 > v2 : v1 < v2)
-       v2_win = !v1.nil? && !v2.nil? && v1 != v2 && (higher_is_better ? v2 > v1 : v2 < v1)
-       [label, v1_str, v2_str, v1_win, v2_win]
-     end %>
+  <% if tab == "lifetime" %>
 
-  <% threshold_rows = [
-       ["10+ breaks",       @for_stats.breaks_10_plus, @against_stats.breaks_10_plus],
-       ["20+ breaks",       @for_stats.breaks_20_plus, @against_stats.breaks_20_plus],
-       ["30+ breaks",       @for_stats.breaks_30_plus, @against_stats.breaks_30_plus],
-       ["40+ breaks",       @for_stats.breaks_40_plus, @against_stats.breaks_40_plus],
-       ["50+ breaks",       @for_stats.breaks_50_plus, @against_stats.breaks_50_plus],
-       ["Centuries (100+)", @for_stats.centuries,       @against_stats.centuries],
-     ].select { |_, v1, v2| v1 > 0 || v2 > 0 }
-      .map    { |label, v1, v2| stat_row.(label, v1, v2) } %>
+    <%# Match & frame record %>
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+      <div class="border-b border-gray-800 px-4 py-2.5">
+        <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Record</h2>
+      </div>
+      <table class="w-full border-collapse table-fixed">
+        <colgroup>
+          <col style="width:42%">
+          <col style="width:16%">
+          <col style="width:42%">
+        </colgroup>
+        <thead>
+          <tr class="border-b border-gray-800">
+            <th class="text-left text-sm font-bold text-green-400 px-4 py-3">Won</th>
+            <th class="text-center text-xs text-gray-600 uppercase tracking-wider px-1 py-3"></th>
+            <th class="text-right text-sm font-bold text-gray-400 px-4 py-3">Lost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-left text-sm font-semibold tabular-nums px-4 py-2.5 <%= @matches_won >= @matches_lost ? 'text-green-400' : 'text-gray-300' %>"><%= @matches_won %></td>
+            <td class="text-center text-xs text-gray-600 px-1 py-2.5">Matches</td>
+            <td class="text-right text-sm font-semibold tabular-nums px-4 py-2.5 <%= @matches_lost > @matches_won ? 'text-green-400' : 'text-gray-300' %>"><%= @matches_lost %></td>
+          </tr>
+          <tr class="bg-gray-900/60">
+            <td class="text-left text-sm font-semibold tabular-nums px-4 py-2.5 <%= @frames_won >= @frames_lost ? 'text-green-400' : 'text-gray-300' %>"><%= @frames_won %></td>
+            <td class="text-center text-xs text-gray-600 px-1 py-2.5">Frames</td>
+            <td class="text-right text-sm font-semibold tabular-nums px-4 py-2.5 <%= @frames_lost > @frames_won ? 'text-green-400' : 'text-gray-300' %>"><%= @frames_lost %></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-  <% rows = [
-       stat_row.("Total score",       @for_stats.total_score,          @against_stats.total_score),
-       stat_row.("Points from pots",  @for_stats.points_from_pots,     @against_stats.points_from_pots),
-       stat_row.("Points from fouls", @for_stats.points_from_fouls,    @against_stats.points_from_fouls),
-       :divider,
-       stat_row.("Balls potted",      @for_stats.balls_potted,         @against_stats.balls_potted),
-       stat_row.("Reds potted",       @for_stats.reds_potted,          @against_stats.reds_potted),
-       stat_row.("Colours potted",    @for_stats.colors_potted,        @against_stats.colors_potted),
-       stat_row.("Free balls potted", @for_stats.free_balls_potted,    @against_stats.free_balls_potted),
-       :divider,
-       stat_row.("Highest break",     @for_stats.highest_break,        @against_stats.highest_break),
-       stat_row.("Breaks",            @for_stats.number_of_breaks,     @against_stats.number_of_breaks),
-       stat_row.("Multi-pot breaks",  @for_stats.multi_pot_breaks,     @against_stats.multi_pot_breaks),
-       stat_row.("Avg multi-pot break", @for_stats.avg_multi_pot_break, @against_stats.avg_multi_pot_break),
-       *threshold_rows,
-       :divider,
-       stat_row.("Fouls committed",   @for_stats.fouls_committed,      @against_stats.fouls_committed,      higher_is_better: false),
-       stat_row.("Foul pts conceded", @for_stats.foul_points_conceded, @against_stats.foul_points_conceded, higher_is_better: false),
-     ] %>
+    <%# For vs Against stats %>
+    <% stat_row = ->(label, v1, v2, higher_is_better: true) do
+         v1_str = v1.nil? ? "—" : v1.to_s
+         v2_str = v2.nil? ? "—" : v2.to_s
+         v1_win = !v1.nil? && !v2.nil? && v1 != v2 && (higher_is_better ? v1 > v2 : v1 < v2)
+         v2_win = !v1.nil? && !v2.nil? && v1 != v2 && (higher_is_better ? v2 > v1 : v2 < v1)
+         [label, v1_str, v2_str, v1_win, v2_win]
+       end %>
 
-  <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-    <table class="w-full border-collapse table-fixed">
-      <colgroup>
-        <col style="width:42%">
-        <col style="width:16%">
-        <col style="width:42%">
-      </colgroup>
-      <thead>
-        <tr class="border-b border-gray-800">
-          <th class="text-left text-sm font-bold text-green-400 px-4 py-3">For</th>
-          <th class="text-center text-xs text-gray-600 uppercase tracking-wider px-1 py-3">Stat</th>
-          <th class="text-right text-sm font-bold text-gray-400 px-4 py-3">Against</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% rows.each_with_index do |row, i| %>
-          <% if row == :divider %>
-            <tr><td colspan="3" class="border-t border-gray-800/60 p-0"></td></tr>
-          <% else %>
-            <% label, v1, v2, v1_win, v2_win = row %>
-            <tr class="<%= i.odd? ? 'bg-gray-900/60' : '' %>">
-              <td class="text-left text-sm font-semibold tabular-nums px-4 py-2.5 <%= v1_win ? 'text-green-400' : 'text-gray-300' %>"><%= v1 %></td>
-              <td class="text-center text-xs text-gray-600 px-1 py-2.5"><%= label %></td>
-              <td class="text-right text-sm font-semibold tabular-nums px-4 py-2.5 <%= v2_win ? 'text-green-400' : 'text-gray-300' %>"><%= v2 %></td>
-            </tr>
+    <% threshold_rows = [
+         ["10+ breaks",       @for_stats.breaks_10_plus, @against_stats.breaks_10_plus],
+         ["20+ breaks",       @for_stats.breaks_20_plus, @against_stats.breaks_20_plus],
+         ["30+ breaks",       @for_stats.breaks_30_plus, @against_stats.breaks_30_plus],
+         ["40+ breaks",       @for_stats.breaks_40_plus, @against_stats.breaks_40_plus],
+         ["50+ breaks",       @for_stats.breaks_50_plus, @against_stats.breaks_50_plus],
+         ["Centuries (100+)", @for_stats.centuries,       @against_stats.centuries],
+       ].select { |_, v1, v2| v1 > 0 || v2 > 0 }
+        .map    { |label, v1, v2| stat_row.(label, v1, v2) } %>
+
+    <% rows = [
+         stat_row.("Total score",         @for_stats.total_score,          @against_stats.total_score),
+         stat_row.("Points from pots",    @for_stats.points_from_pots,     @against_stats.points_from_pots),
+         stat_row.("Points from fouls",   @for_stats.points_from_fouls,    @against_stats.points_from_fouls),
+         :divider,
+         stat_row.("Balls potted",        @for_stats.balls_potted,         @against_stats.balls_potted),
+         stat_row.("Reds potted",         @for_stats.reds_potted,          @against_stats.reds_potted),
+         stat_row.("Colours potted",      @for_stats.colors_potted,        @against_stats.colors_potted),
+         stat_row.("Free balls potted",   @for_stats.free_balls_potted,    @against_stats.free_balls_potted),
+         :divider,
+         stat_row.("Highest break",       @for_stats.highest_break,        @against_stats.highest_break),
+         stat_row.("Breaks",              @for_stats.number_of_breaks,     @against_stats.number_of_breaks),
+         stat_row.("Multi-pot breaks",    @for_stats.multi_pot_breaks,     @against_stats.multi_pot_breaks),
+         stat_row.("Avg multi-pot break", @for_stats.avg_multi_pot_break,  @against_stats.avg_multi_pot_break),
+         *threshold_rows,
+         :divider,
+         stat_row.("Fouls committed",     @for_stats.fouls_committed,      @against_stats.fouls_committed,      higher_is_better: false),
+         stat_row.("Foul pts conceded",   @for_stats.foul_points_conceded, @against_stats.foul_points_conceded, higher_is_better: false),
+       ] %>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+      <table class="w-full border-collapse table-fixed">
+        <colgroup>
+          <col style="width:42%">
+          <col style="width:16%">
+          <col style="width:42%">
+        </colgroup>
+        <thead>
+          <tr class="border-b border-gray-800">
+            <th class="text-left text-sm font-bold text-green-400 px-4 py-3">For</th>
+            <th class="text-center text-xs text-gray-600 uppercase tracking-wider px-1 py-3">Stat</th>
+            <th class="text-right text-sm font-bold text-gray-400 px-4 py-3">Against</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.each_with_index do |row, i| %>
+            <% if row == :divider %>
+              <tr><td colspan="3" class="border-t border-gray-800/60 p-0"></td></tr>
+            <% else %>
+              <% label, v1, v2, v1_win, v2_win = row %>
+              <tr class="<%= i.odd? ? 'bg-gray-900/60' : '' %>">
+                <td class="text-left text-sm font-semibold tabular-nums px-4 py-2.5 <%= v1_win ? 'text-green-400' : 'text-gray-300' %>"><%= v1 %></td>
+                <td class="text-center text-xs text-gray-600 px-1 py-2.5"><%= label %></td>
+                <td class="text-right text-sm font-semibold tabular-nums px-4 py-2.5 <%= v2_win ? 'text-green-400' : 'text-gray-300' %>"><%= v2 %></td>
+              </tr>
+            <% end %>
           <% end %>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+        </tbody>
+      </table>
+    </div>
+
+  <% else %><%# trends tab %>
+
+    <% if @frame_series.empty? %>
+      <div class="text-center py-16 text-gray-500">No granular frame data yet.</div>
+    <% else %>
+
+    <%# Controls %>
+    <div class="flex flex-col gap-3">
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1">Stat</label>
+          <select id="stat-select" class="w-full bg-gray-900 border border-gray-700 text-white text-sm rounded-xl px-3 py-2">
+            <option value="points">Points scored</option>
+            <option value="highest_break">Highest break</option>
+            <option value="breaks">Breaks</option>
+            <option value="multi_pot_breaks">Multi-pot breaks</option>
+            <option value="fouls">Fouls committed</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1">Window</label>
+          <select id="window-select" class="w-full bg-gray-900 border border-gray-700 text-white text-sm rounded-xl px-3 py-2">
+            <option value="5">5 frames</option>
+            <option value="10" selected>10 frames</option>
+            <option value="20">20 frames</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1">Date range</label>
+        <div class="flex gap-1">
+          <% current_range = params[:range] || "all" %>
+          <% [["30d", "30d"], ["90d", "90d"], ["180d", "6mo"], ["365d", "1yr"], ["all", "All"]].each do |val, label| %>
+            <%= link_to label, stats_user_path(@user, tab: "trends", range: val),
+                class: "flex-1 text-center text-xs py-1.5 rounded-lg border transition-colors #{current_range == val ? 'bg-gray-700 text-white border-gray-500' : 'border-gray-700 text-gray-400 hover:text-white hover:border-gray-500'}" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <%# Chart %>
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <span id="chart-title" class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Points scored</span>
+        <span id="chart-summary" class="text-xs text-gray-600"></span>
+      </div>
+      <canvas id="trends-chart" style="max-height: 280px"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script>
+      const ALL_DATA = <%= raw @frame_series.to_json %>
+
+      const STAT_LABELS = {
+        points:           "Points scored",
+        highest_break:    "Highest break",
+        breaks:           "Breaks",
+        multi_pot_breaks: "Multi-pot breaks",
+        fouls:            "Fouls committed"
+      }
+
+      let chart = null
+
+      function rollingAvg(values, window) {
+        return values.map((_, i) => {
+          const slice = values.slice(Math.max(0, i - window + 1), i + 1)
+          return parseFloat((slice.reduce((a, b) => a + b, 0) / slice.length).toFixed(2))
+        })
+      }
+
+      function render() {
+        const stat   = document.getElementById("stat-select").value
+        const window = parseInt(document.getElementById("window-select").value)
+        const data   = ALL_DATA
+        const values = data.map(d => d[stat])
+        const avg    = rollingAvg(values, window)
+        const labels = data.map((d, i) => d.date || `Frame ${i + 1}`)
+
+        document.getElementById("chart-title").textContent = STAT_LABELS[stat]
+        document.getElementById("chart-summary").textContent =
+          data.length > 0 ? `${data.length} frames` : "No data"
+
+        if (chart) chart.destroy()
+        chart = new Chart(document.getElementById("trends-chart"), {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Per frame",
+                data: values,
+                borderColor: "rgba(255,255,255,0.15)",
+                backgroundColor: "transparent",
+                pointRadius: 2,
+                pointBackgroundColor: "rgba(255,255,255,0.3)",
+                borderWidth: 1,
+                tension: 0.2
+              },
+              {
+                label: `${window}-frame avg`,
+                data: avg,
+                borderColor: "#22c55e",
+                backgroundColor: "rgba(34,197,94,0.08)",
+                pointRadius: 0,
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+              legend: {
+                labels: { color: "#9ca3af", font: { size: 11 } }
+              },
+              tooltip: {
+                backgroundColor: "#1f2937",
+                titleColor: "#e5e7eb",
+                bodyColor: "#9ca3af",
+                borderColor: "#374151",
+                borderWidth: 1
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: "#4b5563", maxTicksLimit: 8, font: { size: 10 } },
+                grid: { color: "rgba(255,255,255,0.04)" }
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: "#4b5563", font: { size: 10 } },
+                grid: { color: "rgba(255,255,255,0.04)" }
+              }
+            }
+          }
+        })
+      }
+
+      document.getElementById("stat-select").addEventListener("change", render)
+      document.getElementById("window-select").addEventListener("change", render)
+
+      render()
+    </script>
+
+    <% end %>
+  <% end %>
 </div>
