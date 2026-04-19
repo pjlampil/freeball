@@ -68,7 +68,7 @@ USER 1000:1000
 # Copy built artifacts: gems, application
 COPY --chown=rails:rails --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --chown=rails:rails --from=build /rails /rails
-RUN chmod +x /rails/bin/start-server
+RUN chmod +x /rails/bin/docker-entrypoint /rails/bin/start-server
 
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
