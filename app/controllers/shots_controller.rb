@@ -9,6 +9,18 @@ class ShotsController < ApplicationController
       shot_params_data[:foul_value] ||= 4
     end
 
+    if shot_params_data[:result] == "potted"
+      valid = @frame.valid_balls
+      submitted = shot_params_data[:ball]&.to_sym
+      unless valid.include?(submitted)
+        MatchChannel.broadcast_frame_update(@frame)
+        return respond_to do |format|
+          format.json { render json: { error: "invalid ball" }, status: :unprocessable_entity }
+          format.any  { render partial: "frames/frame", locals: { frame: @frame.reload } }
+        end
+      end
+    end
+
     @shot = @visit.shots.build(shot_params_data)
     @shot.sequence = @visit.shots.count + 1
 

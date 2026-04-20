@@ -77,8 +77,8 @@ class Frame < ApplicationRecord
 
     last_potted = visit.shots.where(result: :potted).order(:sequence).last
 
-    if last_potted&.red? || last_potted&.free_ball?
-      # Just potted a red (or free ball as red) — any colour can be nominated
+    if last_potted&.red? || (last_potted&.free_ball? && reds_remaining > 0)
+      # Just potted a red (or free ball substituting a red) — any colour can be nominated
       [ :yellow, :green, :brown, :blue, :pink, :black ]
     elsif reds_remaining > 0
       [ :red ]

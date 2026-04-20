@@ -10,6 +10,15 @@
 <% undo_message = local_assigns[:undo_message] %>
 
 <div id="frame-<%= frame.id %>" class="space-y-4">
+  <script>
+    (function() {
+      var frameEl = document.getElementById("frame-<%= frame.id %>");
+      if (!frameEl) return;
+      frameEl.addEventListener("submit", function() {
+        frameEl.querySelectorAll("button, input[type='submit']").forEach(function(b) { b.disabled = true; });
+      }, { once: true });
+    })();
+  </script>
 
   <% if undo_message %>
     <div class="bg-gray-800 border border-gray-700 text-gray-300 text-sm px-4 py-2.5 rounded-xl flex items-center gap-2">
