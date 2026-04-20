@@ -202,23 +202,27 @@
             wakeLock.addEventListener("release", () => { wakeLock = null; updateButton(); });
           }
 
+          async function noSleepToggle(enable) {
+            if (!noSleep) noSleep = new NoSleep();
+            if (enable) { noSleep.enable(); noSleepActive = true; }
+            else { noSleep.disable(); noSleepActive = false; }
+          }
+
           window.toggleWakeLock = async function() {
             if ("wakeLock" in navigator) {
               if (wakeLock) {
                 await wakeLock.release();
                 wakeLock = null;
               } else {
-                try { await acquireWakeLock(); } catch (e) {}
+                try {
+                  await acquireWakeLock();
+                } catch (e) {
+                  // Wake Lock blocked (e.g. Permissions-Policy header) — fall back to NoSleep
+                  if (typeof NoSleep !== "undefined") await noSleepToggle(true);
+                }
               }
             } else if (typeof NoSleep !== "undefined") {
-              if (!noSleep) noSleep = new NoSleep();
-              if (noSleepActive) {
-                noSleep.disable();
-                noSleepActive = false;
-              } else {
-                noSleep.enable();
-                noSleepActive = true;
-              }
+              await noSleepToggle(!noSleepActive);
             }
             updateButton();
             saveState();
