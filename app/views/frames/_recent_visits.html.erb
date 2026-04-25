@@ -1,4 +1,4 @@
-<% recent_visits = frame.visits.includes(:shots, :player).order(visit_number: :desc).first(6).reverse %>
+<% recent_visits = frame.visits.includes(:shots, :player).order(visit_number: :desc).first(6) %>
 <% if recent_visits.any? %>
   <div id="recent-visits-<%= frame.id %>">
     <h3 class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Recent visits</h3>
