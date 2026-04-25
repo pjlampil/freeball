@@ -13,3 +13,8 @@ html, body {
   overflow-x: hidden;
   max-width: 100%;
 }
+
+/* Eliminate 300ms tap delay on all buttons site-wide */
+button, input[type="submit"] {
+  touch-action: manipulation;
+}

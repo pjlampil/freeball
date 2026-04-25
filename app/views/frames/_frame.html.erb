@@ -14,9 +14,25 @@
     (function() {
       var frameEl = document.getElementById("frame-<%= frame.id %>");
       if (!frameEl) return;
+
+      // Disable all buttons on first submit to prevent double-tap duplicates
       frameEl.addEventListener("submit", function() {
         frameEl.querySelectorAll("button, input[type='submit']").forEach(function(b) { b.disabled = true; });
       }, { once: true });
+
+      // Haptic feedback + reliable press animation on touchstart (no 300ms delay)
+      frameEl.addEventListener("touchstart", function(e) {
+        var btn = e.target.closest("button:not([disabled]), input[type='submit']:not([disabled])");
+        if (!btn) return;
+        if (navigator.vibrate) navigator.vibrate(10);
+        // Reliable press scale — active: pseudo-class is flaky on iOS
+        if (btn.classList.contains("scoring-btn")) {
+          btn.style.transform = "scale(0.88)";
+          var reset = function() { btn.style.transform = ""; btn.removeEventListener("touchend", reset); btn.removeEventListener("touchcancel", reset); };
+          btn.addEventListener("touchend", reset);
+          btn.addEventListener("touchcancel", reset);
+        }
+      }, { passive: true });
     })();
   </script>
 
