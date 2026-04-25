@@ -13,6 +13,11 @@
 
 <%= render "frames/frame", frame: @frame %>
 
+<button type="button" id="wake-lock-toggle"
+        class="w-full mt-2 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white text-sm font-medium rounded-xl transition-colors">
+  ☀ Keep screen on: <span id="wake-lock-state">Off</span>
+</button>
+
 <% if @p1_stats %>
   <div id="frame-live-stats" class="mt-4">
     <p class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Match stats</p>
@@ -20,6 +25,77 @@
   </div>
 <% end %>
 
+
+<script src="/assets/nosleep.min.js"></script>
+<script>
+  // ── Wake lock / keep screen on ───────────────────────────────────────────
+  // Lives here (outside the replaced frame div) so state survives re-renders.
+  (function() {
+    var wakeLock = null;
+    var noSleep = null;
+    var noSleepActive = false;
+
+    function isOn() { return !!(wakeLock || noSleepActive); }
+
+    function updateWakeLockButton() {
+      var btn = document.getElementById("wake-lock-toggle");
+      var state = document.getElementById("wake-lock-state");
+      if (!btn || !state) return;
+      if (isOn()) {
+        state.textContent = "On";
+        btn.classList.remove("text-white", "border-gray-600");
+        btn.classList.add("text-yellow-400", "border-yellow-800");
+      } else {
+        state.textContent = "Off";
+        btn.classList.remove("text-yellow-400", "border-yellow-800");
+        btn.classList.add("text-white", "border-gray-600");
+      }
+    }
+
+    async function acquireWakeLock() {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", function() { wakeLock = null; updateWakeLockButton(); });
+    }
+
+    function enableNoSleep() {
+      if (!noSleep) noSleep = new NoSleep();
+      noSleep.enable();
+      noSleepActive = true;
+    }
+
+    document.getElementById("wake-lock-toggle").addEventListener("click", async function() {
+      if ("wakeLock" in navigator) {
+        if (wakeLock) {
+          await wakeLock.release(); wakeLock = null;
+        } else {
+          try { await acquireWakeLock(); }
+          catch (e) { enableNoSleep(); }
+        }
+      } else if (typeof NoSleep !== "undefined") {
+        if (noSleepActive) { noSleep.disable(); noSleepActive = false; }
+        else { enableNoSleep(); }
+      }
+      sessionStorage.setItem("wakeLockEnabled", isOn() ? "true" : "false");
+      updateWakeLockButton();
+    });
+
+    document.addEventListener("visibilitychange", async function() {
+      if (wakeLock && document.visibilityState === "visible") {
+        try { await acquireWakeLock(); updateWakeLockButton(); } catch (e) {}
+      }
+    });
+
+    // Restore saved preference on page load
+    if (sessionStorage.getItem("wakeLockEnabled") === "true") {
+      if ("wakeLock" in navigator) {
+        acquireWakeLock().then(updateWakeLockButton).catch(function() {});
+      } else if (typeof NoSleep !== "undefined") {
+        enableNoSleep();
+        updateWakeLockButton();
+      }
+    }
+  })();
+</script>
 
 <script type="module">
   // Submit any form inside the scoring frame without a full page load.
