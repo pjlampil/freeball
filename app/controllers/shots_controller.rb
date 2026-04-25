@@ -10,9 +10,13 @@ class ShotsController < ApplicationController
     end
 
     if shot_params_data[:result] == "potted"
-      valid = @frame.valid_balls
       submitted = shot_params_data[:ball]&.to_sym
-      unless valid.include?(submitted)
+      invalid = if submitted == :free_ball
+        !@frame.free_ball_available?
+      else
+        !@frame.valid_balls.include?(submitted)
+      end
+      if invalid
         MatchChannel.broadcast_frame_update(@frame)
         return respond_to do |format|
           format.json { render json: { error: "invalid ball" }, status: :unprocessable_entity }

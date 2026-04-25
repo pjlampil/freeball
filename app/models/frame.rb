@@ -208,7 +208,7 @@ class Frame < ApplicationRecord
     # Nominated colour counts as a skip only when potted in the same visit as the last red
     phase_start = (next_el && next_el[0] == last_red_visit) ? last_red_pos + 2 : last_red_pos + 1
 
-    phase_pots = (ordered_pots[phase_start..] || []).reject { |_, ball| ball == "red" }
+    phase_pots = (ordered_pots[phase_start..] || []).reject { |_, ball| ball == "red" || ball == "free_ball" }
     colors_in_order[phase_pots.length]&.to_sym
   end
 
@@ -227,7 +227,7 @@ class Frame < ApplicationRecord
       last_red_visit = ordered_pots[last_red_pos][0]
       next_el        = ordered_pots[last_red_pos + 1]
       phase_start    = (next_el && next_el[0] == last_red_visit) ? last_red_pos + 2 : last_red_pos + 1
-      (ordered_pots[phase_start..] || []).reject { |_, ball| ball == "red" }
+      (ordered_pots[phase_start..] || []).reject { |_, ball| ball == "red" || ball == "free_ball" }
     else
       []
     end
