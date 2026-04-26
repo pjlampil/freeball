@@ -15,9 +15,35 @@ class FramesController < ApplicationController
 
   def stats
     @match = @frame.match
-    visits = @frame.visits.includes(:shots, :player).to_a
+    visits = @frame.visits.includes(:shots, :player).order(:visit_number).to_a
     @p1_stats = Stats.new(@match.player1, visits)
     @p2_stats = Stats.new(@match.player2, visits)
+
+    # Build shot-by-shot cumulative score series for the points chart
+    p1 = @match.player1
+    p2 = @match.player2
+    p1_score = 0
+    p2_score = 0
+    @points_series = []
+
+    visits.each do |visit|
+      visit.shots.sort_by(&:sequence).each do |shot|
+        if shot.potted?
+          if visit.player == p1
+            p1_score += shot.points
+          else
+            p2_score += shot.points
+          end
+        elsif shot.foul?
+          if visit.player == p1
+            p2_score += shot.foul_value.to_i
+          else
+            p1_score += shot.foul_value.to_i
+          end
+        end
+        @points_series << { p1: p1_score, p2: p2_score }
+      end
+    end
   end
 
   def end_visit
